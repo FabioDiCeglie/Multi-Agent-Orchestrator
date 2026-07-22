@@ -1,6 +1,6 @@
 # Multi-Agent Orchestrator — Architecture Plan
 
-> A reusable multi-agent system built on Google ADK and MCP tool use, with a simple polling-based UI.
+> A reusable multi-agent system built on Google ADK and MCP tool use, with a simple loading UI.
 
 ---
 
@@ -9,81 +9,79 @@
 ```mermaid
 graph TD
     OP(("👤 Operator"))
-    CLI["CLI\n--config goal.yaml\n--mcp-url ..."]
-    ORCH["Orchestrator\nasyncio loop"]
-    PL["🧠 Planner\nDecomposes goal"]
-    EX["⚙️ Executor\nRuns subtasks"]
-    CR["🔍 Critic\nEvaluates output"]
-    MCP1["MCP Server A\ne.g. web_search"]
-    MCP2["MCP Server B\ne.g. file_writer"]
-    API["FastAPI\nREST API"]
-    UI["Next.js Dashboard\nLoading → Results"]
+    CLI["cli.py\n--config goal.yaml\n--mcp-url ..."]
+    ORCH["orchestrator.py\nLoopAgent + SequentialAgent"]
+    PL["🧠 PlannerAgent"]
+    EX["⚙️ ExecutorAgent"]
+    CR["🔍 CriticAgent"]
+    MCP["MCP Server(s)\nvia MCP_URLS env var"]
+    API["main.py\nFastAPI — POST /runs"]
+    UI["Next.js\nSpinner → Result"]
 
     OP -->|"goal YAML"| CLI
+    OP -->|"POST {goal}"| API
     CLI --> ORCH
+    API --> ORCH
     ORCH --> PL
-    PL -->|"subtasks"| EX
-    EX -->|"results"| CR
-    CR -->|"approved ✅\nor revision hints 🔄"| ORCH
-    EX <-->|"tool calls"| MCP1
-    EX <-->|"tool calls"| MCP2
-    ORCH -->|"stores run log"| API
-    UI -->|"GET /runs/{id}\nevery 2s"| API
+    PL --> EX
+    EX --> CR
+    CR -->|"VERDICT: APPROVED\nescalate=True"| ORCH
+    EX <-->|"McpToolset"| MCP
+    ORCH -->|"result"| API
+    API -->|"RunResult"| UI
 ```
 
 ---
 
-## 2. Orchestration Loop
+## 2. Orchestration Loop (ADK-native)
 
 ```mermaid
 flowchart TD
-    START([Pipeline Start]) --> PLAN
-    PLAN["🧠 Planner\nBreaks goal into subtasks"]
-    EXEC["⚙️ Executor\nRuns each subtask via MCP tools\nasync parallel where deps allow"]
-    CRIT["🔍 Critic\nScores output against rubric"]
-    APPROVE{Approved?\nor max iterations?}
-    REVISE["Pack revision_hints\ninto context"]
-    DONE([✅ Pipeline Complete\nStore final run log])
+    START([POST /runs — goal received]) --> LOOP
 
-    START --> PLAN
-    PLAN -->|"subtasks[]"| EXEC
-    EXEC -->|"results[]"| CRIT
-    CRIT --> APPROVE
-    APPROVE -->|"Yes"| DONE
-    APPROVE -->|"No"| REVISE
-    REVISE -->|"iteration + 1"| PLAN
+    subgraph LOOP ["LoopAgent (max_iterations)"]
+        direction TB
+        PL["🧠 PlannerAgent\nnumbered markdown subtasks"]
+        EX["⚙️ ExecutorAgent\nruns subtasks via MCP tools"]
+        CR["🔍 CriticAgent\nVERDICT: APPROVED or REVISE"]
+        PL --> EX --> CR
+    end
+
+    CR -->|"APPROVED\nescalate=True"| DONE
+    CR -->|"REVISE\nnext iteration"| PL
+    DONE([✅ Return final result])
 ```
 
-> Partial revision: the Critic can target individual failing subtasks, so the Planner only re-plans the minimum necessary set on each retry.
+> ADK handles iteration and context passing automatically — no manual loop code.
 
 ---
 
-## 3. The Three Core Agents
+## 3. The Three Agents
 
 ```mermaid
 graph LR
-    subgraph PLANNER ["🧠 Planner"]
-        PI["Input\ngoal + context\n(prev results + hints)"]
-        PO["Output\nsubtasks[]\nreasoning"]
-        PI --> PO
+    subgraph PA ["🧠 PlannerAgent(LlmAgent)"]
+        P1["Sees: goal + full conversation history"]
+        P2["Outputs: numbered markdown subtask list"]
+        P1 --> P2
     end
 
-    subgraph EXECUTOR ["⚙️ Executor"]
-        EI["Input\nsubtask + mcp_tools[]"]
-        EC["ADK agent\ncalls MCP tools"]
-        EO["Output\nresult\ntool_calls[]"]
-        EI --> EC --> EO
+    subgraph EA ["⚙️ ExecutorAgent(LlmAgent)"]
+        E1["Sees: subtasks from Planner"]
+        E2["McpToolset injects tools from MCP_URLS"]
+        E3["Outputs: markdown results per subtask"]
+        E1 --> E2 --> E3
     end
 
-    subgraph CRITIC ["🔍 Critic"]
-        CI["Input\ngoal + results[]\nrubric + iteration"]
-        CS["Score 0–1\nper rubric criterion"]
-        CO["Output\napproved: bool\nfeedback\nrevision_hints[]"]
-        CI --> CS --> CO
+    subgraph CA ["🔍 CriticAgent(LlmAgent)"]
+        C1["Sees: full conversation"]
+        C2["Outputs: feedback + VERDICT"]
+        C3["after_agent_callback\nchecks for APPROVED\nsets escalate=True"]
+        C1 --> C2 --> C3
     end
 
-    PO -->|"one subtask at a time"| EI
-    EO -->|"all results"| CI
+    P2 --> E1
+    E3 --> C1
 ```
 
 ---
@@ -92,205 +90,125 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant CLI
-    participant Orch as Orchestrator Bootstrap
-    participant MCP as MCP Server(s)
-    participant ADK as ADK Executor Agent
-    participant Handler as ToolCallHandler
+    participant Env as MCP_URLS env var
+    participant Exec as ExecutorAgent
+    participant ADK as McpToolset (ADK)
+    participant MCP as MCP Server
 
-    CLI->>Orch: --mcp-url http://localhost:8001/mcp
-    Orch->>MCP: fetch tool manifest
-    MCP-->>Orch: [{name, description, input_schema}]
-    Orch->>ADK: inject as FunctionDeclaration[]
-    Note over ADK: Executor sees only named tools,<br/>never raw MCP URLs
+    Env->>Exec: list of MCP URLs at startup
+    Exec->>ADK: McpToolset(StreamableHTTPConnectionParams)
+    ADK->>MCP: fetch tool manifest
+    MCP-->>ADK: [{name, description, schema}]
+    Note over Exec: Gemini sees tool names + descriptions<br/>and decides which to call
 
-    ADK->>Handler: tool_call(name="web_search", args={...})
-    Handler->>MCP: forward via MCP transport
-    MCP-->>Handler: tool result
-    Handler-->>ADK: result string
+    Exec->>ADK: tool_call("web_search", {...})
+    ADK->>MCP: forward call
+    MCP-->>ADK: result
+    ADK-->>Exec: result string
 ```
 
 ---
 
-## 5. API & Polling (replaces streaming)
+## 5. API — Single Endpoint
 
 ```mermaid
 sequenceDiagram
-    participant UI as Next.js UI
-    participant API as FastAPI
-    participant Orch as Orchestrator
+    participant UI as Next.js
+    participant API as FastAPI (main.py)
+    participant Orch as orchestrator.run()
 
-    UI->>API: POST /runs {config}
-    API-->>UI: {run_id, status: "running"}
-    API->>Orch: start run (background task)
-
-    loop every 2 seconds
-        UI->>API: GET /runs/{run_id}
-        API-->>UI: {status: "running", iteration: 2}
-        Note over UI: Show spinner + current iteration
-    end
-
-    Orch-->>API: run complete → store full log
-    UI->>API: GET /runs/{run_id}
-    API-->>UI: {status: "complete", log: [...], result: "..."}
-    Note over UI: Hide spinner, render results
+    UI->>API: POST /runs {goal, max_iterations}
+    API->>Orch: await orchestrator.run(cfg, MCP_URLS)
+    Note over API,Orch: Blocks until pipeline completes
+    Orch-->>API: final result string
+    API-->>UI: {result: "..."}
+    Note over UI: Hide spinner, render result
 ```
 
-### API Endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/runs` | Start a new run, returns `run_id` |
-| `GET` | `/runs/{run_id}` | Poll status + current iteration |
-| `GET` | `/runs/{run_id}/result` | Full run log + final result (once complete) |
-
-### Run Status Model
+### Models
 
 ```
-RunStatus
-├── run_id      UUID
-├── status      "running" | "complete" | "error"
-├── iteration   int  (current iteration number)
-├── started_at  datetime
-└── completed_at datetime | None
-
-RunResult (returned when complete)
-├── ...RunStatus fields
-├── final_result   str
-├── total_iterations int
-├── critic_scores  list[float]   ← one per iteration
-└── log            list[LogEntry]
-    ├── iteration  int
-    ├── subtasks   list[SubtaskResult]
-    └── critic     CriticOutput
+RunRequest   → goal: str, max_iterations: int
+RunResult    → result: str
 ```
 
 ---
 
-## 6. YAML Configuration Schema
+## 6. YAML Config
 
 ```mermaid
 graph TD
-    CFG["goal.yaml"]
-    CFG --> ORC["orchestrator\n─ goal: str\n─ max_iterations: int\n─ quality_threshold: float"]
-    CFG --> MCP3["mcp_servers[]\n─ name: str\n─ url: AnyUrl"]
-    CFG --> AGT["agents\n─ planner  {model, temperature}\n─ executor {model, temperature}\n─ critic   {model, temperature}"]
-    CFG --> RUB["critic_rubric\n─ criteria[]\n  ─ name\n  ─ description\n  ─ weight  ← must sum to 1.0"]
+    CFG["examples/research_goal.yaml"]
+    CFG --> G["goal: str"]
+    CFG --> M["max_iterations: int"]
+```
+
+> Minimal on purpose — MCP URLs come from the `MCP_URLS` env var, not the config file.
+
+---
+
+## 7. Frontend Layout
+
+```
+┌──────────────────────────────────────────┐
+│  Multi-Agent Orchestrator                │
+│  Goal: "Research top 5 LLM frameworks"   │
+├──────────────────────────────────────────┤
+│                                          │
+│    ⏳ Running...                         │
+│    🧠 → ⚙️ → 🔍  (animated)             │
+│                                          │
+└──────────────────────────────────────────┘
+
+              ↓  when POST /runs returns
+
+┌──────────────────────────────────────────┐
+│  ✅ Complete                             │
+├──────────────────────────────────────────┤
+│  RESULT                                  │
+│  ──────────────────────────────────────  │
+│  | Framework  | Stars | License | ...  │ │
+│  | LangChain  | 90k   | MIT     | ...  │ │
+└──────────────────────────────────────────┘
 ```
 
 ---
 
-## 7. Frontend Dashboard Layout
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Multi-Agent Orchestrator          Run: abc-123                 │
-│  Goal: "Research top 5 LLM frameworks..."                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│               ⏳ Running...   Iteration 2 / 5                   │
-│                                                                 │
-│         🧠 Planner → ⚙️ Executor → 🔍 Critic  🔄              │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│  (empty while running — results appear here when complete)      │
-└─────────────────────────────────────────────────────────────────┘
-
-                         ↓  on complete
-
-┌─────────────────────────────────────────────────────────────────┐
-│  Multi-Agent Orchestrator          Run: abc-123   ✅ Approved   │
-│  Goal: "Research top 5 LLM frameworks..."                       │
-├─────────────────────────────────────────────────────────────────┤
-│  Critic Score per Iteration   ▁▃▅▇█                            │
-│  Completed in 3 iterations                                      │
-├─────────────────────────────────────────────────────────────────┤
-│  FINAL RESULT                                                   │
-│  ─────────────────────────────────────────────────────────────  │
-│  | Framework   | Stars | License | ... |                        │
-│  | LangChain   | 90k   | MIT     | ... |                        │
-│  | ...                                                          │
-├─────────────────────────────────────────────────────────────────┤
-│  RUN LOG  (collapsible per iteration)                           │
-│  ▶ Iteration 1 — Score 0.62 — 4 subtasks                       │
-│  ▶ Iteration 2 — Score 0.79 — 3 subtasks                       │
-│  ▼ Iteration 3 — Score 0.91 — 2 subtasks  ✅                   │
-│    Subtask 1: web_search → "..."                                │
-│    Subtask 2: file_writer → saved comparison.md                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 8. Folder Structure
+## 8. Actual Folder Structure
 
 ```
 multi-agent-orchestrator/
 │
 ├── Plan.md
 ├── README.md
+├── .gitignore
 │
-├── backend/
-│   ├── pyproject.toml               ← uv / Python project
-│   ├── uv.lock
-│   ├── agents/
-│   │   ├── planner.py              ← PlannerAgent
-│   │   ├── executor.py             ← ExecutorAgent
-│   │   └── critic.py               ← CriticAgent
-│   │
-│   ├── orchestrator/
-│   │   ├── loop.py                 ← async orchestration loop
-│   │   ├── context.py              ← RunContext (shared state + log)
-│   │   └── runner.py               ← top-level entrypoint
-│   │
-│   ├── mcp/
-│   │   ├── client.py               ← connects to MCP servers
-│   │   └── handler.py              ← ADK ToolCallHandler → MCP
-│   │
-│   ├── api/
-│   │   ├── app.py                  ← FastAPI factory
-│   │   ├── store.py                ← in-memory run store (dict of RunStatus)
-│   │   └── routes/
-│   │       └── runs.py             ← POST /runs, GET /runs/{id}, GET /runs/{id}/result
-│   │
-│   ├── config/
-│   │   ├── schema.py               ← Pydantic Config + RunStatus models
-│   │   └── loader.py               ← YAML → Config
-│   │
-│   ├── cli/
-│   │   └── main.py                 ← Click CLI entry point
-│   │
-│   └── examples/
-│       └── research_goal.yaml
-│
-└── frontend/
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tailwind.config.ts
-│   └── src/
-│       ├── app/
-│       │   ├── layout.tsx
-│       │   ├── page.tsx            ← start a new run
-│       │   └── run/[runId]/
-│       │       └── page.tsx        ← dashboard (loading → results)
-│       │
-│       ├── components/
-│       │   ├── RunningSpinner.tsx  ← spinner + iteration counter
-│       │   ├── ResultView.tsx      ← final result display
-│       │   ├── RunLog.tsx          ← collapsible iteration log
-│       │   └── CriticScoreChart.tsx ← Recharts sparkline
-│       │
-│       ├── hooks/
-│       │   └── useRunPoller.ts     ← polls GET /runs/{id} every 2s
-│       │
-│       └── types/
-│           └── runs.ts             ← TypeScript mirror of RunStatus / RunResult
-│
-└── docker/
-    ├── Dockerfile.backend
-    ├── Dockerfile.frontend
-    └── docker-compose.yml
+└── backend/
+    ├── pyproject.toml              ← uv project + dependencies
+    ├── uv.lock
+    ├── .venv/
+    │
+    ├── main.py                     ← FastAPI, POST /runs
+    ├── orchestrator.py             ← functional pipeline (LoopAgent)
+    ├── cli.py                      ← Click CLI entry point
+    │
+    ├── agents/
+    │   ├── planner.py              ← PlannerAgent(LlmAgent)
+    │   ├── executor.py             ← ExecutorAgent(LlmAgent) + McpToolset
+    │   └── critic.py               ← CriticAgent(LlmAgent) + escalate callback
+    │
+    ├── config/
+    │   ├── schema.py               ← OrchestratorConfig, AgentConfig
+    │   └── loader.py               ← ConfigLoader class
+    │
+    ├── mcp/
+    │   └── client.py               ← MCPClient (direct use / testing)
+    │
+    └── examples/
+        └── research_goal.yaml
 ```
+
+> Frontend not built yet — coming in Phase 2.
 
 ---
 
@@ -299,67 +217,35 @@ multi-agent-orchestrator/
 ```mermaid
 graph LR
     subgraph Backend ["Backend (Python 3.11+)"]
-        ADK["Google ADK\nagent framework"]
-        MCPS["MCP Python SDK\ntool transport"]
-        FA2["FastAPI\nREST API"]
-        PYD["Pydantic v2\nconfig + models"]
+        ADK["Google ADK 2.5\nLoopAgent, SequentialAgent\nLlmAgent, McpToolset"]
+        FA["FastAPI + uvicorn\nPOST /runs"]
+        PYD["Pydantic v2\nconfig + API models"]
         CLK["Click\nCLI"]
         UV["uv\ndep management"]
     end
 
-    subgraph Frontend ["Frontend (TypeScript)"]
-        NX["Next.js 14\nApp Router"]
-        TW["TailwindCSS\nstyling"]
-        RC["Recharts\nscore sparkline"]
-        PM["pnpm"]
+    subgraph Frontend ["Frontend — Phase 2"]
+        NX["Next.js 14"]
+        TW["TailwindCSS"]
     end
 
-    FA2 <-->|"REST / polling"| NX
-```
-
-> Streaming removed: no WebSocket, no SSE, no Zustand, no event queue. Just `fetch` + a `useRunPoller` hook.
-
----
-
-## 10. Build & Run — Local Dev
-
-```mermaid
-graph LR
-    T1["Terminal 1\nuv run python -m backend.cli.main run\n--config examples/research_goal.yaml\n--mcp-url http://localhost:8001/mcp"]
-    T2["Terminal 2\nMCP server\ne.g. web_search on :8001"]
-    T3["Terminal 3\npnpm dev\nNext.js on :3000"]
-
-    T2 <-->|"MCP transport"| T1
-    T1 -->|"REST :8000"| T3
-```
-
-### Implementation Order
-
-```mermaid
-graph LR
-    subgraph Phase1 ["Phase 1 — Backend"]
-        direction TB
-        C1["1. config/"] --> C2["2. mcp/"]
-        C2 --> C3["3. agents/planner"]
-        C3 --> C4["4. agents/executor"]
-        C4 --> C5["5. agents/critic"]
-        C5 --> C6["6. orchestrator/loop"]
-        C6 --> C7["7. api/"]
-        C7 --> C8["8. cli/"]
-    end
-
-    subgraph Phase2 ["Phase 2 — Frontend"]
-        direction TB
-        F1["1. types/runs.ts"] --> F2["2. hooks/useRunPoller"]
-        F2 --> F3["3. RunningSpinner"]
-        F3 --> F4["4. ResultView + RunLog"]
-        F4 --> F5["5. CriticScoreChart"]
-        F5 --> F6["6. Dashboard page"]
-    end
-
-    C8 --> F1
+    FA <-->|"HTTP"| NX
 ```
 
 ---
 
-*Plan v1.2 — streaming replaced with polling.*
+## 10. Local Dev
+
+```mermaid
+graph LR
+    T1["Terminal 1\nMCP server on :8001\nexport MCP_URLS=http://localhost:8001/mcp"]
+    T2["Terminal 2\ncd backend\nuv run uvicorn main:app --reload"]
+    T3["Terminal 3\ncd backend\nuv run python cli.py run\n--config examples/research_goal.yaml"]
+
+    T1 <-->|"MCP"| T2
+    T1 <-->|"MCP"| T3
+```
+
+---
+
+*Plan v1.3 — reflects actual implementation.*
