@@ -1,5 +1,6 @@
 from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.lite_llm import LiteLlm
 from google.genai import types
 
 INSTRUCTION = """You are a critic agent. Review the work done by the executor and decide if the goal has been achieved.
@@ -27,7 +28,7 @@ class CriticAgent(LlmAgent):
     def __init__(self, model: str = "claude-sonnet-4-5") -> None:
         super().__init__(
             name="critic",
-            model=model,
+            model=LiteLlm(model=model),
             instruction=INSTRUCTION,
             after_agent_callback=_check_verdict,
         )

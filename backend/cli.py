@@ -1,6 +1,9 @@
 import asyncio
 
 import click
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from config.loader import ConfigLoader
 

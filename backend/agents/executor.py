@@ -1,4 +1,5 @@
 from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StreamableHTTPConnectionParams
 
 INSTRUCTION = """You are an execution agent. You receive a list of subtasks and execute them one by one using the tools available to you.
@@ -20,7 +21,7 @@ class ExecutorAgent(LlmAgent):
         ]
         super().__init__(
             name="executor",
-            model=model,
+            model=LiteLlm(model=model),
             instruction=INSTRUCTION,
             tools=toolsets,
         )
