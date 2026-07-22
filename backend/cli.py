@@ -22,4 +22,7 @@ def run(config: str, mcp_url: tuple[str, ...]) -> None:
 
 
 async def _run(cfg, mcp_urls: list[str]) -> None:
-    click.echo("Orchestrator starting... (agents not wired yet)")
+    import orchestrator
+    result = await orchestrator.run(cfg, mcp_urls)
+    click.echo("\n--- Result ---")
+    click.echo(result)

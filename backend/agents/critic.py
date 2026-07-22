@@ -14,7 +14,6 @@ Be concise. Focus on what matters for the goal.
 
 def _check_verdict(callback_context: CallbackContext) -> types.Content | None:
     session = callback_context.session
-    # Walk events in reverse to find the critic's last model response
     for event in reversed(session.events):
         if event.author == "critic" and event.content:
             for part in event.content.parts:
@@ -24,10 +23,11 @@ def _check_verdict(callback_context: CallbackContext) -> types.Content | None:
     return None
 
 
-def create_critic(model: str = "gemini-2.5-flash") -> LlmAgent:
-    return LlmAgent(
-        name="critic",
-        model=model,
-        instruction=INSTRUCTION,
-        after_agent_callback=_check_verdict,
-    )
+class CriticAgent(LlmAgent):
+    def __init__(self, model: str = "gemini-2.5-flash") -> None:
+        super().__init__(
+            name="critic",
+            model=model,
+            instruction=INSTRUCTION,
+            after_agent_callback=_check_verdict,
+        )

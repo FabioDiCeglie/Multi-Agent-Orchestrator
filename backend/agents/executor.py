@@ -12,14 +12,15 @@ Work through all subtasks in order. Be concise and factual.
 """
 
 
-def create_executor(mcp_urls: list[str], model: str = "gemini-2.5-flash") -> LlmAgent:
-    toolsets = [
-        McpToolset(connection_params=StreamableHTTPConnectionParams(url=url))
-        for url in mcp_urls
-    ]
-    return LlmAgent(
-        name="executor",
-        model=model,
-        instruction=INSTRUCTION,
-        tools=toolsets,
-    )
+class ExecutorAgent(LlmAgent):
+    def __init__(self, mcp_urls: list[str], model: str = "gemini-2.5-flash") -> None:
+        toolsets = [
+            McpToolset(connection_params=StreamableHTTPConnectionParams(url=url))
+            for url in mcp_urls
+        ]
+        super().__init__(
+            name="executor",
+            model=model,
+            instruction=INSTRUCTION,
+            tools=toolsets,
+        )

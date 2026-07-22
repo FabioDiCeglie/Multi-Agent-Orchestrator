@@ -13,9 +13,10 @@ If you receive feedback from a previous attempt, use it to improve the plan.
 """
 
 
-def create_planner(model: str = "gemini-2.5-flash") -> LlmAgent:
-    return LlmAgent(
-        name="planner",
-        model=model,
-        instruction=INSTRUCTION,
-    )
+class PlannerAgent(LlmAgent):
+    def __init__(self, model: str = "gemini-2.5-flash") -> None:
+        super().__init__(
+            name="planner",
+            model=model,
+            instruction=INSTRUCTION,
+        )
