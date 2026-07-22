@@ -11,4 +11,3 @@ class AgentConfig(BaseModel):
 class OrchestratorConfig(BaseModel):
     goal: str
     max_iterations: int = Field(default=5, ge=1, le=20)
-    quality_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
