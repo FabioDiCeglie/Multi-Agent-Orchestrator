@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class AgentConfig(BaseModel):
-    model: str = "gemini-2.5-flash"
+    model: str = "claude-sonnet-4-5"
     temperature: float = Field(default=0.2, ge=0.0, le=2.0)
 
 

@@ -13,7 +13,7 @@ Work through all subtasks in order. Be concise and factual.
 
 
 class ExecutorAgent(LlmAgent):
-    def __init__(self, mcp_urls: list[str], model: str = "gemini-2.5-flash") -> None:
+    def __init__(self, mcp_urls: list[str], model: str = "claude-sonnet-4-5") -> None:
         toolsets = [
             McpToolset(connection_params=StreamableHTTPConnectionParams(url=url))
             for url in mcp_urls

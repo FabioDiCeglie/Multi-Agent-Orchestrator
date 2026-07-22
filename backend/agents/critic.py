@@ -24,7 +24,7 @@ def _check_verdict(callback_context: CallbackContext) -> types.Content | None:
 
 
 class CriticAgent(LlmAgent):
-    def __init__(self, model: str = "gemini-2.5-flash") -> None:
+    def __init__(self, model: str = "claude-sonnet-4-5") -> None:
         super().__init__(
             name="critic",
             model=model,
