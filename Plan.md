@@ -229,10 +229,10 @@ multi-agent-orchestrator/
 │
 ├── Plan.md
 ├── README.md
-├── pyproject.toml                   ← uv / Python project
-├── uv.lock
 │
 ├── backend/
+│   ├── pyproject.toml               ← uv / Python project
+│   ├── uv.lock
 │   ├── agents/
 │   │   ├── planner.py              ← PlannerAgent
 │   │   ├── executor.py             ← ExecutorAgent
@@ -263,7 +263,7 @@ multi-agent-orchestrator/
 │   └── examples/
 │       └── research_goal.yaml
 │
-├── frontend/
+└── frontend/
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── tailwind.config.ts
