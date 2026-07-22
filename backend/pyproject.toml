@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-orchestrator = "cli.main:cli"
+orchestrator = "cli:cli"
 
 [build-system]
 requires = ["hatchling"]
