@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# uv / virtualenv
+.venv/
+venv/
+uv.lock
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Google ADK
+.adk/
+
+# FastAPI / uvicorn
+*.log
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
