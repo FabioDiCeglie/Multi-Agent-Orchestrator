@@ -1,4 +1,11 @@
 import asyncio
+import os
+import warnings
+
+# Disable OpenTelemetry — ADK's tracing throws context errors on generator cancellation
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+# Suppress ADK experimental feature warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="google.adk")
 
 import click
 from dotenv import load_dotenv
@@ -26,6 +33,18 @@ def run(config: str, mcp_url: tuple[str, ...]) -> None:
 
 async def _run(cfg, mcp_urls: list[str]) -> None:
     import orchestrator
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.markdown import Markdown
+    console = Console()
     result = await orchestrator.run(cfg, mcp_urls)
-    click.echo("\n--- Result ---")
-    click.echo(result)
+    console.print(Panel(
+        Markdown(result),
+        title="[bold white]📋 Final Result[/bold white]",
+        border_style="white",
+        padding=(1, 2),
+    ))
+
+
+if __name__ == "__main__":
+    cli()
