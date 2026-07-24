@@ -9,9 +9,13 @@ warnings.filterwarnings("ignore", category=UserWarning, module="google.adk")
 
 import click
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
 
 load_dotenv()
 
+import orchestrator
 from config.loader import ConfigLoader
 
 
@@ -28,17 +32,9 @@ def run(config: str, mcp_url: tuple[str, ...]) -> None:
     click.echo(f"Goal: {cfg.goal}")
     click.echo(f"Max iterations: {cfg.max_iterations}")
     click.echo(f"MCP servers: {list(mcp_url) or 'none'}")
-    asyncio.run(_run(cfg, list(mcp_url)))
 
-
-async def _run(cfg, mcp_urls: list[str]) -> None:
-    import orchestrator
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.markdown import Markdown
-    console = Console()
-    result = await orchestrator.run(cfg, mcp_urls)
-    console.print(Panel(
+    result = asyncio.run(orchestrator.run(cfg, list(mcp_url)))
+    Console().print(Panel(
         Markdown(result),
         title="[bold white]📋 Final Result[/bold white]",
         border_style="white",
