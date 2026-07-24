@@ -3,12 +3,20 @@ from __future__ import annotations
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import orchestrator
 from config.schema import OrchestratorConfig
 
 app = FastAPI(title="Multi-Agent Orchestrator")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 MCP_URLS = [u.strip() for u in os.getenv("MCP_URLS", "").split(",") if u.strip()]
 
