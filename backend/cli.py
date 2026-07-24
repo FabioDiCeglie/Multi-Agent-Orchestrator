@@ -27,13 +27,15 @@ def cli() -> None:
 @cli.command()
 @click.option("--config", required=True, type=click.Path(exists=True), help="Path to goal YAML file")
 @click.option("--mcp-url", multiple=True, help="MCP server URL (can be repeated)")
-def run(config: str, mcp_url: tuple[str, ...]) -> None:
+@click.option("--file", "files", multiple=True, type=click.Path(exists=True), help="Context file (can be repeated)")
+def run(config: str, mcp_url: tuple[str, ...], files: tuple[str, ...]) -> None:
     cfg = ConfigLoader(config).load()
     click.echo(f"Goal: {cfg.goal}")
     click.echo(f"Max iterations: {cfg.max_iterations}")
     click.echo(f"MCP servers: {list(mcp_url) or 'none'}")
+    click.echo(f"Context files: {list(files) or 'none'}")
 
-    result = asyncio.run(orchestrator.run(cfg, list(mcp_url)))
+    result = asyncio.run(orchestrator.run(cfg, list(mcp_url), list(files)))
     Console().print(Panel(
         Markdown(result),
         title="[bold white]📋 Final Result[/bold white]",

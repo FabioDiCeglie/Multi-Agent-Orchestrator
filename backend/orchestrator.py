@@ -62,7 +62,19 @@ def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> LoopAgent:
     )
 
 
-async def run(cfg: OrchestratorConfig, mcp_urls: list[str]) -> str:
+def _build_prompt(goal: str, files: list[str]) -> str:
+    if not files:
+        return goal
+    parts = ["## Context Files\n"]
+    for path in files:
+        with open(path) as f:
+            content = f.read()
+        parts.append(f"### {path}\n```\n{content}\n```\n")
+    parts.append(f"## Goal\n{goal}")
+    return "\n".join(parts)
+
+
+async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | None = None) -> str:
     session_service = InMemorySessionService()
     runner = Runner(
         agent=_build_pipeline(cfg, mcp_urls),
@@ -70,7 +82,8 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str]) -> str:
         session_service=session_service,
     )
     session = await session_service.create_session(app_name="orchestrator", user_id="user")
-    message = types.Content(role="user", parts=[types.Part(text=cfg.goal)])
+    prompt = _build_prompt(cfg.goal, files or [])
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
 
     iteration = 0
     executor_table_text = ""
