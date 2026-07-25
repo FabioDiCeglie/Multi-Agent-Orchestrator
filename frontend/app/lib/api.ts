@@ -5,14 +5,15 @@ export interface RunPipelineParams {
   maxIterations?: number;
 }
 
-export async function runPipeline({
-  goal,
-  maxIterations = 3,
-}: RunPipelineParams): Promise<string> {
+export async function runPipeline(
+  { goal, maxIterations = 3 }: RunPipelineParams,
+  signal?: AbortSignal
+): Promise<string> {
   const res = await fetch(`${API_BASE}/runs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ goal, max_iterations: maxIterations }),
+    signal,
   });
 
   if (!res.ok) {

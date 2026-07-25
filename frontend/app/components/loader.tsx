@@ -6,10 +6,11 @@ const AGENTS = [
 
 interface LoaderProps {
   goal: string;
+  onCancel: () => void;
 }
 
 /** Shown while a run is in flight — echoes the goal and animates the pipeline. */
-export function Loader({ goal }: LoaderProps) {
+export function Loader({ goal, onCancel }: LoaderProps) {
   return (
     <div className="flex flex-col items-center gap-8 text-center">
       <div className="flex flex-col items-center gap-3">
@@ -35,6 +36,13 @@ export function Loader({ goal }: LoaderProps) {
         <span className="size-3 rounded-full border border-text-muted border-t-transparent animate-spin" />
         This may take a minute…
       </div>
+
+      <button
+        onClick={onCancel}
+        className="rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand-500/50"
+      >
+        Cancel
+      </button>
     </div>
   );
 }

@@ -17,7 +17,7 @@ const SUGGESTIONS = [
 
 export default function Home() {
   const [goal, setGoal] = useState("");
-  const { status, data: result, error, run, reset } = useAsync(runPipeline);
+  const { status, data: result, error, run, cancel, reset } = useAsync(runPipeline);
 
   const handleRun = () => {
     if (!goal.trim()) return;
@@ -96,7 +96,7 @@ export default function Home() {
         )}
 
        
-        {status === AsyncStatus.LOADING && <Loader goal={goal} />}
+        {status === AsyncStatus.LOADING && <Loader goal={goal} onCancel={cancel} />}
 
        
         {status === AsyncStatus.SUCCESS && (
