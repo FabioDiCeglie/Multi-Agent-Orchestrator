@@ -11,23 +11,9 @@ const SUGGESTIONS = [
   "Compare Claude vs GPT vs Gemini for coding tasks",
 ];
 
-// Cycles through agent indices 0→1→2 while loading
-function useAgentCycle(active: boolean) {
-  const [index, setIndex] = useState(0);
-
-  useState(() => {
-    if (!active) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % 3), 2200);
-    return () => clearInterval(id);
-  });
-
-  return active ? index : undefined;
-}
-
 export default function Home() {
   const [goal, setGoal] = useState("");
   const { status, data: result, error, run, reset } = useAsync(runPipeline);
-  const activeAgent = useAgentCycle(status === AsyncStatus.LOADING);
 
   const handleRun = () => {
     if (!goal.trim()) return;
@@ -112,7 +98,7 @@ export default function Home() {
               <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
               <p className="text-lg font-medium text-text-primary max-w-md">"{goal}"</p>
             </div>
-            <AgentPipeline activeIndex={activeAgent} />
+            <AgentPipeline active />
             <p className="text-xs text-text-muted animate-pulse">This may take a minute…</p>
           </div>
         )}

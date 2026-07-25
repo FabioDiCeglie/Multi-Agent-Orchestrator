@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const AGENTS = [
   { icon: "🧠", label: "Planner" },
   { icon: "⚙️", label: "Executor" },
@@ -5,10 +9,24 @@ const AGENTS = [
 ];
 
 interface AgentPipelineProps {
-  activeIndex?: number;
+  /** Cycles through agents to show progress while a run is in flight. */
+  active?: boolean;
 }
 
-export function AgentPipeline({ activeIndex }: AgentPipelineProps) {
+export function AgentPipeline({ active = false }: AgentPipelineProps) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setIndex(0);
+      return;
+    }
+    const id = setInterval(() => setIndex((i) => (i + 1) % AGENTS.length), 2200);
+    return () => clearInterval(id);
+  }, [active]);
+
+  const activeIndex = active ? index : undefined;
+
   return (
     <div className="flex items-center gap-1.5">
       {AGENTS.map((a, i) => {
