@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CopyButton } from "@/app/components/copy-button";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AgentPipeline } from "@/app/components/agent-pipeline";
+import { CopyButton } from "@/app/components/copy-button";
+import { ErrorPanel } from "@/app/components/error-panel";
+import { Loader } from "@/app/components/loader";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
 import { runPipeline } from "@/app/lib/api";
 
@@ -94,22 +96,10 @@ export default function Home() {
           </>
         )}
 
-        {/* ── LOADING ── */}
-        {status === AsyncStatus.LOADING && (
-          <div className="flex flex-col items-center gap-8 text-center">
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
-              <p className="text-lg font-medium text-text-primary max-w-md">"{goal}"</p>
-            </div>
-            <AgentPipeline loading />
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="size-3 rounded-full border border-text-muted border-t-transparent animate-spin" />
-              This may take a minute…
-            </div>
-          </div>
-        )}
+       
+        {status === AsyncStatus.LOADING && <Loader goal={goal} />}
 
-        {/* ── DONE ── */}
+       
         {status === AsyncStatus.SUCCESS && (
           <div className="w-full max-w-4xl flex flex-col gap-6">
             <div className="flex items-center justify-between">
@@ -139,18 +129,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* ── ERROR ── */}
-        {status === AsyncStatus.ERROR && (
-          <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-sm text-red-400">{error}</p>
-            <button
-              onClick={reset}
-              className="text-xs text-text-muted hover:text-text-secondary transition-colors"
-            >
-              ← Try again
-            </button>
-          </div>
-        )}
+        
+        {status === AsyncStatus.ERROR && <ErrorPanel message={error} onRetry={reset} />}
 
       </main>
     </>
