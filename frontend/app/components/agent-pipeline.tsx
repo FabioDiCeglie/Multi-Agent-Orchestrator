@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 const AGENTS = [
   { icon: "🧠", label: "Planner" },
   { icon: "⚙️", label: "Executor" },
@@ -9,64 +5,36 @@ const AGENTS = [
 ];
 
 interface AgentPipelineProps {
-  /** Cycles through agents to show progress while a run is in flight. */
-  active?: boolean;
+  /** Dims the pipeline into a subtle "working" treatment while a run is in flight. */
+  loading?: boolean;
 }
 
-export function AgentPipeline({ active = false }: AgentPipelineProps) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!active) {
-      setIndex(0);
-      return;
-    }
-    const id = setInterval(() => setIndex((i) => (i + 1) % AGENTS.length), 2200);
-    return () => clearInterval(id);
-  }, [active]);
-
-  const activeIndex = active ? index : undefined;
-
+export function AgentPipeline({ loading = false }: AgentPipelineProps) {
   return (
-    <div className="flex items-center gap-1.5">
-      {AGENTS.map((a, i) => {
-        const isActive = i === activeIndex;
-        const isDone = activeIndex !== undefined && i < activeIndex;
-
-        return (
-          <span key={a.label} className="flex items-center gap-1.5">
-            <span
-              className={[
-                "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-all duration-300",
-                isActive
-                  ? "border-brand-500 bg-[rgba(99,102,241,0.12)] text-brand-400 shadow-[0_0_12px_rgba(99,102,241,0.25)]"
-                  : isDone
-                  ? "border-border bg-surface-2 text-text-secondary opacity-50"
-                  : "border-border bg-surface-2 text-text-secondary",
-              ].join(" ")}
-            >
-              {/* Spinner replaces icon when active */}
-              {isActive ? (
-                <span className="size-3 rounded-full border border-brand-400 border-t-transparent animate-spin" />
-              ) : (
-                a.icon
-              )}
-              {a.label}
-            </span>
-
-            {i < AGENTS.length - 1 && (
-              <span
-                className={[
-                  "text-xs leading-none transition-colors duration-300",
-                  isDone ? "text-text-secondary" : "text-text-muted",
-                ].join(" ")}
-              >
-                —
-              </span>
-            )}
+    <div
+      className={[
+        "flex items-center gap-1.5 transition-opacity duration-300",
+        loading ? "animate-pulse" : "",
+      ].join(" ")}
+    >
+      {AGENTS.map((a, i) => (
+        <span key={a.label} className="flex items-center gap-1.5">
+          <span
+            className={[
+              "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors duration-300",
+              loading
+                ? "border-brand-500/40 bg-[rgba(99,102,241,0.08)] text-brand-400"
+                : "border-border bg-surface-2 text-text-secondary",
+            ].join(" ")}
+          >
+            {a.icon} {a.label}
           </span>
-        );
-      })}
+
+          {i < AGENTS.length - 1 && (
+            <span className="text-text-muted text-xs leading-none">—</span>
+          )}
+        </span>
+      ))}
     </div>
   );
 }

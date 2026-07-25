@@ -98,8 +98,11 @@ export default function Home() {
               <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
               <p className="text-lg font-medium text-text-primary max-w-md">"{goal}"</p>
             </div>
-            <AgentPipeline active />
-            <p className="text-xs text-text-muted animate-pulse">This may take a minute…</p>
+            <AgentPipeline loading />
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <span className="size-3 rounded-full border border-text-muted border-t-transparent animate-spin" />
+              This may take a minute…
+            </div>
           </div>
         )}
 
