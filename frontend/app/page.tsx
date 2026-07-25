@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { AgentPipeline } from "@/app/components/agent-pipeline";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
 import { runPipeline } from "@/app/lib/api";
@@ -124,9 +126,9 @@ export default function Home() {
 
             <div className="rounded-2xl border border-border bg-surface-1 p-6">
               <p className="text-xs text-text-muted mb-4 font-medium uppercase tracking-widest">Result</p>
-              <pre className="text-sm text-text-primary whitespace-pre-wrap font-mono leading-relaxed">
-                {result}
-              </pre>
+              <div className="prose prose-invert max-w-none text-sm text-text-primary leading-relaxed overflow-x-auto">
+                <Markdown remarkPlugins={[remarkGfm]}>{result}</Markdown>
+              </div>
             </div>
 
             <AgentPipeline />
