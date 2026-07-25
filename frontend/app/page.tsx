@@ -40,7 +40,7 @@ export default function Home() {
         {/* ── IDLE ── */}
         {status === AsyncStatus.IDLE && (
           <>
-            <div className="mb-10 flex items-center gap-2 rounded-full border border-[rgba(99,102,241,0.3)] bg-[rgba(99,102,241,0.08)] px-4 py-1.5 text-xs font-medium tracking-widest text-brand-400 uppercase">
+            <div className="mb-10 flex items-center gap-2 rounded-full border border-[rgba(6,182,212,0.3)] bg-[rgba(6,182,212,0.08)] px-4 py-1.5 text-xs font-medium tracking-widest text-brand-400 uppercase">
               <span className="size-1.5 rounded-full bg-brand-400 animate-pulse" />
               Multi-Agent Orchestrator
             </div>
@@ -53,9 +53,10 @@ export default function Home() {
               execute and verify until the answer is ready.
             </p>
 
-            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface-1 shadow-[0_0_80px_rgba(99,102,241,0.07)] overflow-hidden">
-              <div className="bg-surface-2 px-5 pt-5 pb-4">
+            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface-1 shadow-[0_0_80px_rgba(6,182,212,0.07)] overflow-hidden">
+              <div className="rounded-t-2xl border border-transparent bg-surface-0 px-5 pt-5 pb-4 transition-colors focus-within:border-brand-500/40 focus-within:bg-[rgba(6,182,212,0.04)]">
                 <textarea
+                  autoFocus
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -65,7 +66,7 @@ export default function Home() {
                 />
                 <p className="mt-1 text-[11px] text-text-muted text-right">
                   {goal.length > 0 ? `${goal.length} chars · ` : ""}
-                  <kbd className="font-mono">⌘ Enter</kbd> to run
+                  <kbd className="rounded border border-border bg-surface-1 px-1 py-0.5 font-mono">⌘ Enter</kbd> to run
                 </p>
               </div>
 
@@ -73,7 +74,7 @@ export default function Home() {
                 <button
                   onClick={handleRun}
                   disabled={!goal.trim()}
-                  className="w-full rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-600 disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white transition-all hover:bg-brand-700 disabled:opacity-25 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   Run pipeline →
                 </button>
@@ -107,7 +108,7 @@ export default function Home() {
               </div>
               <button
                 onClick={reset}
-                className="text-xs text-text-muted hover:text-text-secondary transition-colors"
+                className="-mr-2.5 rounded-full px-2.5 py-1 text-xs text-text-muted transition-colors hover:bg-surface-2 hover:text-text-secondary focus-visible:outline-2 focus-visible:outline-brand-500/50"
               >
                 ← Run again
               </button>

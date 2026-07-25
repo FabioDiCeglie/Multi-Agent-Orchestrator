@@ -20,7 +20,7 @@ export function Loader({ goal }: LoaderProps) {
       <div className="flex items-center gap-1.5 animate-pulse">
         {AGENTS.map((a, i) => (
           <span key={a.label} className="flex items-center gap-1.5">
-            <span className="flex items-center gap-1.5 rounded-full border border-brand-500/40 bg-[rgba(99,102,241,0.08)] px-3 py-1 text-[11px] font-medium text-brand-400">
+            <span className="flex items-center gap-1.5 rounded-full border border-brand-500/40 bg-[rgba(6,182,212,0.08)] px-3 py-1 text-[11px] font-medium text-brand-400">
               {a.icon} {a.label}
             </span>
 
