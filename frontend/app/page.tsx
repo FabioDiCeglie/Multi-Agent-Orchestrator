@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CopyButton } from "@/app/components/copy-button";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AgentPipeline } from "@/app/components/agent-pipeline";
@@ -125,9 +126,14 @@ export default function Home() {
             </div>
 
             <div className="rounded-2xl border border-border bg-surface-1 p-6">
-              <p className="text-xs text-text-muted mb-4 font-medium uppercase tracking-widest">Result</p>
-              <div className="prose prose-invert max-w-none text-sm text-text-primary leading-relaxed overflow-x-auto">
-                <Markdown remarkPlugins={[remarkGfm]}>{result}</Markdown>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-xs text-text-muted font-medium uppercase tracking-widest">Result</p>
+                <CopyButton text={result ?? ""} />
+              </div>
+              <div className="result-scroll max-h-[60vh] overflow-y-auto overflow-x-auto pr-2">
+                <div className="prose prose-invert max-w-none text-sm text-text-primary leading-relaxed">
+                  <Markdown remarkPlugins={[remarkGfm]}>{result}</Markdown>
+                </div>
               </div>
             </div>
           </div>
