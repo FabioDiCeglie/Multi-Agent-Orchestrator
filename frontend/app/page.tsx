@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { AgentPipeline } from "@/app/components/agent-pipeline";
-
-type State = "idle" | "loading" | "done" | "error";
+import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
+import { runPipeline } from "@/app/lib/api";
 
 const SUGGESTIONS = [
   "Top 5 LLM frameworks by GitHub stars",
@@ -26,30 +26,12 @@ function useAgentCycle(active: boolean) {
 
 export default function Home() {
   const [goal, setGoal] = useState("");
-  const [state, setState] = useState<State>("idle");
-  const [result, setResult] = useState("");
-  const activeAgent = useAgentCycle(state === "loading");
+  const { status, data: result, error, run, reset } = useAsync(runPipeline);
+  const activeAgent = useAgentCycle(status === AsyncStatus.LOADING);
 
-  const handleRun = async () => {
+  const handleRun = () => {
     if (!goal.trim()) return;
-    setState("loading");
-    setResult("");
-
-    try {
-      const res = await fetch("http://localhost:8000/runs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, max_iterations: 3 }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setResult(data.result);
-      setState("done");
-    } catch (err) {
-      console.error(err);
-      setState("error");
-    }
+    run({ goal, maxIterations: 3 });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -59,11 +41,6 @@ export default function Home() {
     }
   };
 
-  const reset = () => {
-    setState("idle");
-    setResult("");
-  };
-
   return (
     <>
       <div className="orb" />
@@ -71,7 +48,7 @@ export default function Home() {
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-16">
 
         {/* ── IDLE ── */}
-        {state === "idle" && (
+        {status === AsyncStatus.IDLE && (
           <>
             <div className="mb-10 flex items-center gap-2 rounded-full border border-[rgba(99,102,241,0.3)] bg-[rgba(99,102,241,0.08)] px-4 py-1.5 text-xs font-medium tracking-widest text-brand-400 uppercase">
               <span className="size-1.5 rounded-full bg-brand-400 animate-pulse" />
@@ -129,7 +106,7 @@ export default function Home() {
         )}
 
         {/* ── LOADING ── */}
-        {state === "loading" && (
+        {status === AsyncStatus.LOADING && (
           <div className="flex flex-col items-center gap-8 text-center">
             <div className="flex flex-col items-center gap-3">
               <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
@@ -141,7 +118,7 @@ export default function Home() {
         )}
 
         {/* ── DONE ── */}
-        {state === "done" && (
+        {status === AsyncStatus.SUCCESS && (
           <div className="w-full max-w-2xl flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -168,9 +145,9 @@ export default function Home() {
         )}
 
         {/* ── ERROR ── */}
-        {state === "error" && (
+        {status === AsyncStatus.ERROR && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-sm text-red-400">Something went wrong. Is the backend running?</p>
+            <p className="text-sm text-red-400">{error}</p>
             <button
               onClick={reset}
               className="text-xs text-text-muted hover:text-text-secondary transition-colors"
