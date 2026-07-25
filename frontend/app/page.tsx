@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { AgentPipeline } from "@/app/components/agent-pipeline";
 import { CopyButton } from "@/app/components/copy-button";
 import { ErrorPanel } from "@/app/components/error-panel";
 import { Loader } from "@/app/components/loader";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
 import { runPipeline } from "@/app/lib/api";
+import { useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const SUGGESTIONS = [
   "Top 5 LLM frameworks by GitHub stars",
