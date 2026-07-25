@@ -71,7 +71,6 @@ export default function Home() {
               </div>
 
               <div className="px-5 py-4 flex flex-col gap-4 bg-surface-1">
-                <AgentPipeline />
                 <button
                   onClick={handleRun}
                   disabled={!goal.trim()}
