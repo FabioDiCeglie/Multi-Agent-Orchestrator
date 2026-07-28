@@ -3,6 +3,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 export interface RunPipelineParams {
   goal: string;
   maxIterations?: number;
+  files?: File[];
 }
 
 export type AgentAuthor = "planner" | "executor" | "critic" | "summarizer";
@@ -28,14 +29,18 @@ export type PipelineEvent = PipelineStepEvent | PipelineFinalEvent;
  * invoking `onEvent` per step/final event. Resolves once the stream ends.
  */
 export async function runPipelineStream(
-  { goal, maxIterations = 3 }: RunPipelineParams,
+  { goal, maxIterations = 3, files = [] }: RunPipelineParams,
   onEvent: (event: PipelineEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
+  const body = new FormData();
+  body.set("goal", goal);
+  body.set("max_iterations", String(maxIterations));
+  for (const file of files) body.append("files", file);
+
   const res = await fetch(`${API_BASE}/runs/stream`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ goal, max_iterations: maxIterations }),
+    body,
     signal,
   });
 

@@ -15,7 +15,6 @@ interface AgentStepProps {
   collapsible?: boolean;
 }
 
-/** Renders a single Planner/Executor/Critic step, either as a collapsible dropdown or an always-open panel. */
 export function AgentStep({ step, collapsible = true }: AgentStepProps) {
   const meta = AGENT_META[step.author];
   const isApproved = step.verdict === "APPROVED";

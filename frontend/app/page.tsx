@@ -1,8 +1,9 @@
 "use client";
 
-import { AgentStep } from "@/app/components/agent-step";
 import { CopyButton } from "@/app/components/copy-button";
 import { ErrorPanel } from "@/app/components/error-panel";
+import { FileAttachments } from "@/app/components/file-attachments";
+import { PipelineLoading } from "@/app/components/pipeline-loading";
 import { PipelineSteps } from "@/app/components/pipeline-steps";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
 import { PipelineStepEvent, RunPipelineParams, runPipelineStream } from "@/app/lib/api";
@@ -18,13 +19,14 @@ const SUGGESTIONS = [
 
 export default function Home() {
   const [goal, setGoal] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
   const [steps, setSteps] = useState<PipelineStepEvent[]>([]);
 
   const streamPipeline = useCallback(
-    async ({ goal, maxIterations }: RunPipelineParams, signal: AbortSignal) => {
+    async ({ goal, maxIterations, files }: RunPipelineParams, signal: AbortSignal) => {
       let result = "";
       await runPipelineStream(
-        { goal, maxIterations },
+        { goal, maxIterations, files },
         (event) => {
           if (event.type === "step") setSteps((prev) => [...prev, event]);
           else result = event.result;
@@ -41,7 +43,7 @@ export default function Home() {
   const handleRun = () => {
     if (!goal.trim()) return;
     setSteps([]);
-    run({ goal, maxIterations: 3 });
+    run({ goal, maxIterations: 3, files });
   };
 
   const handleReset = () => {
@@ -54,6 +56,14 @@ export default function Home() {
       e.preventDefault();
       handleRun();
     }
+  };
+
+  const addFiles = (newFiles: File[]) => {
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -86,10 +96,12 @@ export default function Home() {
                 rows={4}
                 className="w-full resize-none bg-transparent text-sm text-text-primary placeholder-text-muted focus:outline-none leading-relaxed"
               />
-              <p className="mt-1 text-[11px] text-text-muted text-right">
-                {goal.length > 0 ? `${goal.length} chars · ` : ""}
-                <kbd className="rounded border border-border bg-surface-2 px-1 py-0.5 font-mono">⌘ Enter</kbd> to run
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <FileAttachments files={files} onAdd={addFiles} onRemove={removeFile} />
+                <p className="text-[11px] text-text-muted shrink-0">
+                  <kbd className="rounded border border-border bg-surface-2 px-1 py-0.5 font-mono">⌘ Enter</kbd> to run
+                </p>
+              </div>
             </div>
 
             <div className="px-5 py-4 flex flex-col gap-4 bg-surface-1">
@@ -118,28 +130,7 @@ export default function Home() {
       )}
 
       {status === AsyncStatus.LOADING && (
-        <div className="w-full max-w-4xl flex flex-col gap-6">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
-            <p className="text-lg font-medium text-text-primary max-w-md">&quot;{goal}&quot;</p>
-            <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="size-3 rounded-full border border-border-hover border-t-brand-500 animate-spin" />
-              {steps.length === 0 ? "Starting up…" : "Working through the pipeline…"}
-            </div>
-            <button
-              onClick={cancel}
-              className="mt-1 rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand-500/50"
-            >
-              Cancel
-            </button>
-          </div>
-
-          {steps.length > 0 && (
-            <div className="result-scroll max-h-[65vh] overflow-y-auto pr-2">
-              <AgentStep step={steps[steps.length - 1]} collapsible={false} />
-            </div>
-          )}
-        </div>
+        <PipelineLoading goal={goal} steps={steps} onCancel={cancel} />
       )}
 
       {status === AsyncStatus.SUCCESS && (
