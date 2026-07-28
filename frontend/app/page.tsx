@@ -2,10 +2,10 @@
 
 import { CopyButton } from "@/app/components/copy-button";
 import { ErrorPanel } from "@/app/components/error-panel";
-import { Loader } from "@/app/components/loader";
+import { PipelineSteps } from "@/app/components/pipeline-steps";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
-import { runPipeline } from "@/app/lib/api";
-import { useState } from "react";
+import { PipelineStepEvent, RunPipelineParams, runPipelineStream } from "@/app/lib/api";
+import { useCallback, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -17,11 +17,35 @@ const SUGGESTIONS = [
 
 export default function Home() {
   const [goal, setGoal] = useState("");
-  const { status, data: result, error, run, cancel, reset } = useAsync(runPipeline);
+  const [steps, setSteps] = useState<PipelineStepEvent[]>([]);
+
+  const streamPipeline = useCallback(
+    async ({ goal, maxIterations }: RunPipelineParams, signal: AbortSignal) => {
+      let result = "";
+      await runPipelineStream(
+        { goal, maxIterations },
+        (event) => {
+          if (event.type === "step") setSteps((prev) => [...prev, event]);
+          else result = event.result;
+        },
+        signal
+      );
+      return result;
+    },
+    []
+  );
+
+  const { status, data: result, error, run, cancel, reset } = useAsync(streamPipeline);
 
   const handleRun = () => {
     if (!goal.trim()) return;
+    setSteps([]);
     run({ goal, maxIterations: 3 });
+  };
+
+  const handleReset = () => {
+    setSteps([]);
+    reset();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -96,7 +120,30 @@ export default function Home() {
         )}
 
        
-        {status === AsyncStatus.LOADING && <Loader goal={goal} onCancel={cancel} />}
+        {status === AsyncStatus.LOADING && (
+          <div className="w-full max-w-4xl flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <p className="text-xs font-medium tracking-widest text-text-muted uppercase">Running</p>
+              <p className="text-lg font-medium text-text-primary max-w-md">&quot;{goal}&quot;</p>
+              <div className="flex items-center gap-2 text-xs text-text-muted">
+                <span className="size-3 rounded-full border border-text-muted border-t-transparent animate-spin" />
+                {steps.length === 0 ? "Starting up…" : "Working through the pipeline…"}
+              </div>
+              <button
+                onClick={cancel}
+                className="mt-1 rounded-full border border-border px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand-500/50"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {steps.length > 0 && (
+              <div className="result-scroll max-h-[65vh] overflow-y-auto pr-2">
+                <PipelineSteps steps={steps} />
+              </div>
+            )}
+          </div>
+        )}
 
        
         {status === AsyncStatus.SUCCESS && (
@@ -107,7 +154,7 @@ export default function Home() {
                 <span className="text-sm font-medium text-text-primary">Complete</span>
               </div>
               <button
-                onClick={reset}
+                onClick={handleReset}
                 className="-mr-2.5 rounded-full px-2.5 py-1 text-xs text-text-muted transition-colors hover:bg-surface-2 hover:text-text-secondary focus-visible:outline-2 focus-visible:outline-brand-500/50"
               >
                 ← Run again
@@ -125,11 +172,22 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {steps.length > 0 && (
+              <details className="rounded-2xl border border-border bg-surface-1 p-6">
+                <summary className="cursor-pointer text-xs text-text-muted font-medium uppercase tracking-widest">
+                  Pipeline steps ({steps.length})
+                </summary>
+                <div className="mt-4">
+                  <PipelineSteps steps={steps} />
+                </div>
+              </details>
+            )}
           </div>
         )}
 
         
-        {status === AsyncStatus.ERROR && <ErrorPanel message={error} onRetry={reset} />}
+        {status === AsyncStatus.ERROR && <ErrorPanel message={error} onRetry={handleReset} />}
 
       </main>
     </>
