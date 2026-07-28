@@ -1,5 +1,6 @@
 "use client";
 
+import { AgentStep } from "@/app/components/agent-step";
 import { CopyButton } from "@/app/components/copy-button";
 import { ErrorPanel } from "@/app/components/error-panel";
 import { PipelineSteps } from "@/app/components/pipeline-steps";
@@ -139,7 +140,7 @@ export default function Home() {
 
             {steps.length > 0 && (
               <div className="result-scroll max-h-[65vh] overflow-y-auto pr-2">
-                <PipelineSteps steps={steps} />
+                <AgentStep step={steps[steps.length - 1]} collapsible={false} />
               </div>
             )}
           </div>
