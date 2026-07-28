@@ -17,6 +17,7 @@ load_dotenv()
 
 import orchestrator
 from config.loader import ConfigLoader
+from models.context_file import ContextFile
 
 
 @click.group()
@@ -35,7 +36,8 @@ def run(config: str, mcp_url: tuple[str, ...], files: tuple[str, ...]) -> None:
     click.echo(f"MCP servers: {list(mcp_url) or 'none'}")
     click.echo(f"Context files: {list(files) or 'none'}")
 
-    result = asyncio.run(orchestrator.run(cfg, list(mcp_url), list(files)))
+    context_files = [ContextFile(name=os.path.basename(path), content=open(path).read()) for path in files]
+    result = asyncio.run(orchestrator.run(cfg, list(mcp_url), context_files))
     Console().print(Panel(
         Markdown(result),
         title="[bold white]📋 Final Result[/bold white]",

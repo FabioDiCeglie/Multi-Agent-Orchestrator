@@ -19,6 +19,7 @@ from agents.executor import ExecutorAgent
 from agents.planner import PlannerAgent
 from agents.summarizer import SummarizerAgent
 from config.schema import OrchestratorConfig
+from models.context_file import ContextFile
 
 console = Console()
 
@@ -70,19 +71,17 @@ def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> SequentialA
     )
 
 
-def _build_prompt(goal: str, files: list[str]) -> str:
+def _build_prompt(goal: str, files: list[ContextFile]) -> str:
     if not files:
         return goal
     parts = ["## Context Files\n"]
-    for path in files:
-        with open(path) as f:
-            content = f.read()
-        parts.append(f"### {path}\n```\n{content}\n```\n")
+    for file in files:
+        parts.append(f"### {file.name}\n```\n{file.content}\n```\n")
     parts.append(f"## Goal\n{goal}")
     return "\n".join(parts)
 
 
-async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | None = None) -> str:
+async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextFile] | None = None) -> str:
     session_service = InMemorySessionService()
     runner = Runner(
         agent=_build_pipeline(cfg, mcp_urls),
@@ -159,7 +158,7 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
 
 
 async def run_stream(
-    cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | None = None
+    cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextFile] | None = None
 ) -> AsyncIterator[dict[str, Any]]:
     """API entry point — yields one dict per Planner/Executor/Critic step, then a final event.
 
