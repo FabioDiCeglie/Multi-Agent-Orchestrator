@@ -17,6 +17,7 @@ from rich.table import Table
 from agents.critic import CriticAgent
 from agents.executor import ExecutorAgent
 from agents.planner import PlannerAgent
+from agents.summarizer import SummarizerAgent
 from config.schema import OrchestratorConfig
 
 console = Console()
@@ -50,15 +51,21 @@ def _extract_table_text(text: str) -> str:
     return "\n".join(lines[start:]).strip() if start is not None else ""
 
 
-def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> LoopAgent:
-    return LoopAgent(
+def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> SequentialAgent:
+    return SequentialAgent(
         name="orchestrator",
-        max_iterations=cfg.max_iterations,
         sub_agents=[
-            SequentialAgent(
-                name="pipeline",
-                sub_agents=[PlannerAgent(), ExecutorAgent(mcp_urls), CriticAgent()],
-            )
+            LoopAgent(
+                name="planning_loop",
+                max_iterations=cfg.max_iterations,
+                sub_agents=[
+                    SequentialAgent(
+                        name="pipeline",
+                        sub_agents=[PlannerAgent(), ExecutorAgent(mcp_urls), CriticAgent()],
+                    )
+                ],
+            ),
+            SummarizerAgent(),
         ],
     )
 
@@ -87,7 +94,7 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
     message = types.Content(role="user", parts=[types.Part(text=prompt)])
 
     iteration = 0
-    executor_table_text = ""
+    summary_text = ""
 
     async for event in runner.run_async(user_id="user", session_id=session.id, new_message=message):
         author = getattr(event, "author", None)
@@ -113,22 +120,12 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
             clean = _clean_executor(text)
             table_text = _extract_table_text(clean)
             rich_table = _parse_md_table(table_text) if table_text else None
-            if rich_table:
-                console.print(Panel(
-                    rich_table,
-                    title="[bold cyan]⚙️  Executor[/bold cyan]",
-                    border_style="cyan",
-                    padding=(1, 2),
-                ))
-                if not executor_table_text:
-                    executor_table_text = table_text
-            else:
-                console.print(Panel(
-                    Markdown(clean[:400]),
-                    title="[bold cyan]⚙️  Executor[/bold cyan]",
-                    border_style="cyan",
-                    padding=(1, 2),
-                ))
+            console.print(Panel(
+                rich_table if rich_table else Markdown(clean[:400]),
+                title="[bold cyan]⚙️  Executor[/bold cyan]",
+                border_style="cyan",
+                padding=(1, 2),
+            ))
 
         elif author == "critic":
             approved = "APPROVED" in text
@@ -142,6 +139,9 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
                 padding=(1, 2),
             ))
 
+        elif author == "summarizer":
+            summary_text = text
+
     console.print()
     console.print(Rule(
         f"[bold green] ✅ Complete — {iteration} iteration{'s' if iteration != 1 else ''} [/bold green]",
@@ -149,7 +149,7 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
     ))
     console.print()
 
-    return executor_table_text or "(no table produced)"
+    return summary_text or "(no result produced)"
 
 
 async def run_stream(
@@ -171,8 +171,7 @@ async def run_stream(
     message = types.Content(role="user", parts=[types.Part(text=prompt)])
 
     iteration = 0
-    executor_table_text = ""
-    last_executor_text = ""
+    summary_text = ""
 
     async for event in runner.run_async(user_id="user", session_id=session.id, new_message=message):
         author = getattr(event, "author", None)
@@ -188,15 +187,18 @@ async def run_stream(
 
         elif author == "executor":
             clean = _clean_executor(text)
-            last_executor_text = clean
-            table_text = _extract_table_text(clean)
-            if table_text and not executor_table_text:
-                executor_table_text = table_text
             yield {"type": "step", "iteration": iteration, "author": "executor", "text": clean}
 
         elif author == "critic":
             verdict = "APPROVED" if "APPROVED" in text else "REVISE"
-            yield {"type": "step", "iteration": iteration, "author": "critic", "text": text, "verdict": verdict}
+            yield {
+                "type": "step", "iteration": iteration, "author": "critic",
+                "text": text, "verdict": verdict,
+            }
 
-    result = executor_table_text or last_executor_text or "(no result produced)"
-    yield {"type": "final", "result": result, "iterations": iteration}
+        elif author == "summarizer":
+            summary_text = text
+
+    yield {
+        "type": "final", "result": summary_text or "(no result produced)", "iterations": iteration,
+    }
