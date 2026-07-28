@@ -15,7 +15,7 @@ If you receive feedback from a previous attempt, use it to improve the plan.
 
 
 class PlannerAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-5") -> None:
+    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
         super().__init__(
             name="planner",
             model=LiteLlm(model=model),

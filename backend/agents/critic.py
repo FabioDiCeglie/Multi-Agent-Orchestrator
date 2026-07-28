@@ -19,7 +19,7 @@ def exit_loop(tool_context: ToolContext) -> dict:
 
 
 class CriticAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-5") -> None:
+    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
         super().__init__(
             name="critic",
             model=LiteLlm(model=model),

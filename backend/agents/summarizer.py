@@ -16,7 +16,7 @@ Rules:
 
 
 class SummarizerAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-5") -> None:
+    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
         super().__init__(
             name="summarizer",
             model=LiteLlm(model=model),
