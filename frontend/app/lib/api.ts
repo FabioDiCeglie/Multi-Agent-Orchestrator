@@ -5,7 +5,7 @@ export interface RunPipelineParams {
   maxIterations?: number;
 }
 
-export type AgentAuthor = "planner" | "executor" | "critic";
+export type AgentAuthor = "planner" | "executor" | "critic" | "summarizer";
 
 export interface PipelineStepEvent {
   type: "step";

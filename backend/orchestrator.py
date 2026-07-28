@@ -141,6 +141,12 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
 
         elif author == "summarizer":
             summary_text = text
+            console.print(Panel(
+                Markdown(text),
+                title="[bold white]📝 Summarizer[/bold white]",
+                border_style="white",
+                padding=(1, 2),
+            ))
 
     console.print()
     console.print(Rule(
@@ -198,6 +204,7 @@ async def run_stream(
 
         elif author == "summarizer":
             summary_text = text
+            yield {"type": "step", "iteration": iteration, "author": "summarizer", "text": text}
 
     yield {
         "type": "final", "result": summary_text or "(no result produced)", "iterations": iteration,

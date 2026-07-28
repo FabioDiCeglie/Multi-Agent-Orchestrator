@@ -6,6 +6,7 @@ const AGENT_META = {
   planner: { icon: "🧠", label: "Planner", border: "border-blue-500/30", text: "text-blue-400" },
   executor: { icon: "⚙️", label: "Executor", border: "border-cyan-500/30", text: "text-cyan-400" },
   critic: { icon: "🔍", label: "Critic", border: "border-amber-500/30", text: "text-amber-400" },
+  summarizer: { icon: "📝", label: "Summarizer", border: "border-text-muted/30", text: "text-text-secondary" },
 } as const;
 
 interface AgentStepProps {
