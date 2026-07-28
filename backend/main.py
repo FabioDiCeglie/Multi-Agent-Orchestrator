@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ from fastapi import FastAPI
 
 load_dotenv()
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 import orchestrator
@@ -38,3 +40,14 @@ async def create_run(req: RunRequest) -> RunResult:
     cfg = OrchestratorConfig(goal=req.goal, max_iterations=req.max_iterations)
     result = await orchestrator.run(cfg, MCP_URLS)
     return RunResult(result=result)
+
+
+@app.post("/runs/stream")
+async def create_run_stream(req: RunRequest) -> StreamingResponse:
+    cfg = OrchestratorConfig(goal=req.goal, max_iterations=req.max_iterations)
+
+    async def generate():
+        async for event in orchestrator.run_stream(cfg, MCP_URLS):
+            yield json.dumps(event) + "\n"
+
+    return StreamingResponse(generate(), media_type="application/x-ndjson")

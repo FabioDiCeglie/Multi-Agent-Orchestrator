@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any, AsyncIterator
 
 from google.adk.agents import LoopAgent, SequentialAgent
 from google.adk.runners import Runner
@@ -149,3 +150,53 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | N
     console.print()
 
     return executor_table_text or "(no table produced)"
+
+
+async def run_stream(
+    cfg: OrchestratorConfig, mcp_urls: list[str], files: list[str] | None = None
+) -> AsyncIterator[dict[str, Any]]:
+    """API entry point — yields one dict per Planner/Executor/Critic step, then a final event.
+
+    Separate from `run()` (used by the CLI) so the CLI's `rich` console output is
+    never affected by changes made here for the web UI.
+    """
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=_build_pipeline(cfg, mcp_urls),
+        app_name="orchestrator",
+        session_service=session_service,
+    )
+    session = await session_service.create_session(app_name="orchestrator", user_id="user")
+    prompt = _build_prompt(cfg.goal, files or [])
+    message = types.Content(role="user", parts=[types.Part(text=prompt)])
+
+    iteration = 0
+    executor_table_text = ""
+    last_executor_text = ""
+
+    async for event in runner.run_async(user_id="user", session_id=session.id, new_message=message):
+        author = getattr(event, "author", None)
+        if not (event.content and event.content.parts):
+            continue
+        text = (event.content.parts[0].text or "").strip()
+        if not text:
+            continue
+
+        if author == "planner":
+            iteration += 1
+            yield {"type": "step", "iteration": iteration, "author": "planner", "text": text}
+
+        elif author == "executor":
+            clean = _clean_executor(text)
+            last_executor_text = clean
+            table_text = _extract_table_text(clean)
+            if table_text and not executor_table_text:
+                executor_table_text = table_text
+            yield {"type": "step", "iteration": iteration, "author": "executor", "text": clean}
+
+        elif author == "critic":
+            verdict = "APPROVED" if "APPROVED" in text else "REVISE"
+            yield {"type": "step", "iteration": iteration, "author": "critic", "text": text, "verdict": verdict}
+
+    result = executor_table_text or last_executor_text or "(no result produced)"
+    yield {"type": "final", "result": result, "iterations": iteration}
