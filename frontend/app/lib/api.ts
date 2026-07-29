@@ -9,12 +9,19 @@ export interface RunPipelineParams {
 
 export type AgentAuthor = "planner" | "executor" | "critic" | "summarizer";
 
+export interface ToolCall {
+  name: string;
+  args: Record<string, unknown>;
+}
+
 export interface PipelineStepEvent {
   type: "step";
   iteration: number;
   author: AgentAuthor;
   text: string;
   verdict?: "APPROVED" | "REVISE";
+  toolCalls?: ToolCall[];
+  mcpUrls?: string[];
 }
 
 export interface PipelineFinalEvent {

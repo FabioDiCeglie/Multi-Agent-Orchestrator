@@ -182,6 +182,14 @@ async def run_stream(
         author = getattr(event, "author", None)
         if not (event.content and event.content.parts):
             continue
+
+        # Collect tool calls (function_call parts) from the event
+        tool_calls = [
+            {"name": p.function_call.name, "args": dict(p.function_call.args)}
+            for p in event.content.parts
+            if getattr(p, "function_call", None)
+        ]
+
         text = (event.content.parts[0].text or "").strip()
         if not text:
             continue
@@ -192,7 +200,11 @@ async def run_stream(
 
         elif author == "executor":
             clean = _clean_executor(text)
-            yield {"type": "step", "iteration": iteration, "author": "executor", "text": clean}
+            step: dict[str, Any] = {"type": "step", "iteration": iteration, "author": "executor", "text": clean}
+            if tool_calls:
+                step["toolCalls"] = tool_calls
+                step["mcpUrls"] = mcp_urls
+            yield step
 
         elif author == "critic":
             verdict = "APPROVED" if "APPROVED" in text else "REVISE"

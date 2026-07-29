@@ -18,13 +18,26 @@ interface AgentStepProps {
 export function AgentStep({ step, collapsible = true }: AgentStepProps) {
   const meta = AGENT_META[step.author];
   const isApproved = step.verdict === "APPROVED";
+  const hasMcpTools = step.toolCalls && step.toolCalls.length > 0;
   const border = step.author === "critic" ? (isApproved ? "border-emerald-500/30" : "border-amber-500/30") : meta.border;
   const text = step.author === "critic" ? (isApproved ? "text-emerald-400" : meta.text) : meta.text;
+
+  const mcpHost = step.mcpUrls?.[0]?.replace(/^https?:\/\//, "").split("/")[0];
+  const icon = hasMcpTools ? "🔧" : meta.icon;
+  const label = hasMcpTools
+    ? step.toolCalls!.map((tc) => tc.name).join(", ")
+    : meta.label;
+  const subtitle = hasMcpTools && mcpHost ? mcpHost : null;
 
   const header = (
     <div className={`flex items-center justify-between px-4 py-3 ${collapsible ? "" : "border-b border-border"}`}>
       <span className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest ${text}`}>
-        {meta.icon} {meta.label}
+        {icon} {label}
+        {subtitle && (
+          <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-text-muted">
+            via {subtitle}
+          </span>
+        )}
       </span>
       <div className="flex items-center gap-2">
         {step.verdict && (
