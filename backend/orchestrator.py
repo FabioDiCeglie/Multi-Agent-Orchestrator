@@ -99,6 +99,13 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextF
         author = getattr(event, "author", None)
         if not (event.content and event.content.parts):
             continue
+
+        tool_calls = [
+            p.function_call.name
+            for p in event.content.parts
+            if getattr(p, "function_call", None)
+        ]
+
         text = (event.content.parts[0].text or "").strip()
         if not text:
             continue
@@ -119,9 +126,13 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextF
             clean = _clean_executor(text)
             table_text = _extract_table_text(clean)
             rich_table = _parse_md_table(table_text) if table_text else None
+            if tool_calls:
+                title = f"[bold cyan]🔧 {', '.join(tool_calls)}[/bold cyan]"
+            else:
+                title = "[bold cyan]⚙️  Executor[/bold cyan]"
             console.print(Panel(
                 rich_table if rich_table else Markdown(clean[:400]),
-                title="[bold cyan]⚙️  Executor[/bold cyan]",
+                title=title,
                 border_style="cyan",
                 padding=(1, 2),
             ))
