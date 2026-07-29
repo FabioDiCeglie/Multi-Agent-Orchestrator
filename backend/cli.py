@@ -4,8 +4,8 @@ import warnings
 
 # Disable OpenTelemetry — ADK's tracing throws context errors on generator cancellation
 os.environ.setdefault("OTEL_SDK_DISABLED", "true")
-# Suppress ADK experimental feature warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="google.adk")
+# Suppress ADK and Google auth warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 import click
 from dotenv import load_dotenv
