@@ -4,6 +4,7 @@ export interface RunPipelineParams {
   goal: string;
   maxIterations?: number;
   files?: File[];
+  mcpUrls?: string[];
 }
 
 export type AgentAuthor = "planner" | "executor" | "critic" | "summarizer";
@@ -29,13 +30,14 @@ export type PipelineEvent = PipelineStepEvent | PipelineFinalEvent;
  * invoking `onEvent` per step/final event. Resolves once the stream ends.
  */
 export async function runPipelineStream(
-  { goal, maxIterations = 3, files = [] }: RunPipelineParams,
+  { goal, maxIterations = 3, files = [], mcpUrls = [] }: RunPipelineParams,
   onEvent: (event: PipelineEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {
   const body = new FormData();
   body.set("goal", goal);
   body.set("max_iterations", String(maxIterations));
+  if (mcpUrls.length > 0) body.set("mcp_urls", mcpUrls.join(","));
   for (const file of files) body.append("files", file);
 
   const res = await fetch(`${API_BASE}/runs/stream`, {
