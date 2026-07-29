@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 import orchestrator
 from config.schema import OrchestratorConfig
-from mcp.client import MCPClient
+from mcp_client.client import MCPClient
 from models.context_file import ContextFile
 
 app = FastAPI(title="Multi-Agent Orchestrator")
