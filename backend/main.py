@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -12,12 +11,11 @@ from fastapi import FastAPI, File, Form, UploadFile
 load_dotenv()
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
-import orchestrator
 from config.schema import OrchestratorConfig
 from mcp_client.client import MCPClient
 from models.context_file import ContextFile
+from orchestrator import APIOrchestrator
 
 app = FastAPI(title="Multi-Agent Orchestrator")
 
@@ -27,21 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-class RunResult(BaseModel):
-    result: str
-
-
-@app.post("/runs", response_model=RunResult)
-async def create_run(
-    goal: str = Form(...),
-    max_iterations: int = Form(5),
-    files: list[UploadFile] = File(default=[]),
-) -> RunResult:
-    cfg = OrchestratorConfig(goal=goal, max_iterations=max_iterations)
-    urls = MCPClient.resolve_urls(os.getenv("MCP_URLS", ""))
-    result = await orchestrator.run(cfg, urls, await ContextFile.from_uploads(files))
-    return RunResult(result=result)
 
 
 @app.post("/runs/stream")
@@ -56,7 +39,8 @@ async def create_run_stream(
 
     async def generate():
         context = await ContextFile.from_uploads(files)
-        async for event in orchestrator.run_stream(cfg, urls, context):
+        orch = APIOrchestrator(cfg, urls, context)
+        async for event in orch.run_stream():
             yield json.dumps(event) + "\n"
 
     return StreamingResponse(generate(), media_type="application/x-ndjson")

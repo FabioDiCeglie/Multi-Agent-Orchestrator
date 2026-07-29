@@ -16,10 +16,10 @@ from rich.table import Table
 
 load_dotenv()
 
-import orchestrator
 from config.loader import ConfigLoader
 from mcp_client.client import MCPClient
 from models.context_file import ContextFile
+from orchestrator import CLIOrchestrator
 
 
 @click.group()
@@ -70,7 +70,8 @@ def run(config: str, mcp_url: tuple[str, ...], files: tuple[str, ...]) -> None:
     ))
     console.print()
 
-    result = asyncio.run(orchestrator.run(cfg, urls, context_files))
+    orch = CLIOrchestrator(cfg, urls, context_files)
+    result = asyncio.run(orch.run())
     console.print(Panel(
         Markdown(result),
         title="[bold white]📋 Final Result[/bold white]",
