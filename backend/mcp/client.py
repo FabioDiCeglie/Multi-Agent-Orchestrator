@@ -4,8 +4,12 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.types import Tool
 
-
 class MCPClient:
+    @staticmethod
+    def resolve_urls(csv: str) -> list[str]:
+        """Split a comma-separated string of URLs into a clean list."""
+        return [u.strip() for u in csv.split(",") if u.strip()]
+
     def __init__(self, name: str, url: str) -> None:
         self.name = name
         self.url = url
