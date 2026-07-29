@@ -52,7 +52,11 @@ def _extract_table_text(text: str) -> str:
     return "\n".join(lines[start:]).strip() if start is not None else ""
 
 
-def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> SequentialAgent:
+def _build_pipeline(
+    cfg: OrchestratorConfig,
+    mcp_urls: list[str],
+    files: list[ContextFile] | None = None,
+) -> SequentialAgent:
     return SequentialAgent(
         name="orchestrator",
         sub_agents=[
@@ -62,7 +66,11 @@ def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> SequentialA
                 sub_agents=[
                     SequentialAgent(
                         name="pipeline",
-                        sub_agents=[PlannerAgent(), ExecutorAgent(mcp_urls), CriticAgent()],
+                        sub_agents=[
+                            PlannerAgent(),
+                            ExecutorAgent(mcp_urls, files),
+                            CriticAgent(),
+                        ],
                     )
                 ],
             ),
@@ -74,17 +82,23 @@ def _build_pipeline(cfg: OrchestratorConfig, mcp_urls: list[str]) -> SequentialA
 def _build_prompt(goal: str, files: list[ContextFile]) -> str:
     if not files:
         return goal
-    parts = ["## Context Files\n"]
-    for file in files:
-        parts.append(f"### {file.name}\n```\n{file.content}\n```\n")
-    parts.append(f"## Goal\n{goal}")
-    return "\n".join(parts)
+    names = ", ".join(f.name for f in files)
+    return (
+        f"## Available Context Files\n"
+        f"{names}\n\n"
+        f"Use the read_context_file tool to read them.\n\n"
+        f"## Goal\n{goal}"
+    )
 
 
-async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextFile] | None = None) -> str:
+async def run(
+    cfg: OrchestratorConfig,
+    mcp_urls: list[str],
+    files: list[ContextFile] | None = None,
+) -> str:
     session_service = InMemorySessionService()
     runner = Runner(
-        agent=_build_pipeline(cfg, mcp_urls),
+        agent=_build_pipeline(cfg, mcp_urls, files),
         app_name="orchestrator",
         session_service=session_service,
     )
@@ -113,7 +127,10 @@ async def run(cfg: OrchestratorConfig, mcp_urls: list[str], files: list[ContextF
         if author == "planner":
             iteration += 1
             console.print()
-            console.print(Rule(f"[bold white] Iteration {iteration} [/bold white]", style="bright_blue"))
+            console.print(Rule(
+                f"[bold white] Iteration {iteration} [/bold white]",
+                style="bright_blue",
+            ))
             console.print()
             console.print(Panel(
                 Markdown(text),
@@ -178,7 +195,7 @@ async def run_stream(
     """
     session_service = InMemorySessionService()
     runner = Runner(
-        agent=_build_pipeline(cfg, mcp_urls),
+        agent=_build_pipeline(cfg, mcp_urls, files),
         app_name="orchestrator",
         session_service=session_service,
     )
