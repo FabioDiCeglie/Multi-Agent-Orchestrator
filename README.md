@@ -37,6 +37,22 @@ cd backend && uv sync
 
 Requires `ANTHROPIC_API_KEY` in `backend/.env` for Claude access via LiteLLM.
 
+### Docker Compose
+
+One command for backend + frontend with hot reload:
+
+```bash
+cp backend/.env.example backend/.env   # add your ANTHROPIC_API_KEY
+docker compose up --build
+```
+
+| Service  | URL                   |
+| -------- | --------------------- |
+| Frontend | http://localhost:3000 |
+| Backend  | http://localhost:8000 |
+
+If MCP servers run on your host machine (not in Docker), use `http://host.docker.internal:PORT/mcp` instead of `localhost` in the UI — the backend container can't reach `localhost` on your host.
+
 ### Tests
 
 ```bash
