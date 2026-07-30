@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -16,10 +15,6 @@ from fastapi.responses import StreamingResponse
 from config.schema import OrchestratorConfig
 from models.context_file import ContextFile
 from orchestrator import APIOrchestrator
-
-
-def _parse_mcp_urls(csv: str) -> list[str]:
-    return [u.strip() for u in csv.split(",") if u.strip()]
 
 
 app = FastAPI(title="Multi-Agent Orchestrator")
@@ -40,9 +35,8 @@ async def create_run_stream(
     files: list[UploadFile] = File(default=[]),
 ) -> StreamingResponse:
     cfg = OrchestratorConfig(goal=goal, max_iterations=max_iterations)
-    env_urls = _parse_mcp_urls(os.getenv("MCP_URLS", ""))
-    form_urls = _parse_mcp_urls(mcp_urls or "")
-    urls = env_urls + [u for u in form_urls if u not in env_urls]
+    raw = mcp_urls or ""
+    urls = [u.strip() for u in raw.split(",") if u.strip()]
 
     async def generate():
         context = await ContextFile.from_uploads(files)

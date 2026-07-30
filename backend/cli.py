@@ -39,9 +39,7 @@ def cli() -> None:
 def run(config: str, mcp_url: tuple[str, ...], files: tuple[str, ...]) -> None:
     console = Console()
     cfg = ConfigLoader(config).load()
-    env_csv = os.getenv("MCP_URLS", "")
-    env_urls = [u.strip() for u in env_csv.split(",") if u.strip()]
-    urls = env_urls + list(mcp_url)
+    urls = list(mcp_url)
 
     context_files = []
     for p in files:
