@@ -10,6 +10,7 @@ from rich.rule import Rule
 from rich.table import Table
 
 from orchestrator.base import BaseOrchestrator
+from services.error_service import ErrorService
 
 
 class CLIOrchestrator(BaseOrchestrator):
@@ -45,7 +46,7 @@ class CLIOrchestrator(BaseOrchestrator):
         except Exception as exc:
             self.console.print()
             self.console.print(Panel(
-                str(getattr(exc, "message", None) or exc),
+                ErrorService.clean_provider_error(exc),
                 title="[bold red]❌ Error[/bold red]",
                 border_style="red",
                 padding=(1, 2),
