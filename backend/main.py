@@ -13,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 from config.schema import OrchestratorConfig
-from mcp_client.client import MCPClient
 from models.context_file import ContextFile
 from orchestrator import APIOrchestrator
 
@@ -35,7 +34,8 @@ async def create_run_stream(
     files: list[UploadFile] = File(default=[]),
 ) -> StreamingResponse:
     cfg = OrchestratorConfig(goal=goal, max_iterations=max_iterations)
-    urls = MCPClient.resolve_urls(mcp_urls or "")
+    raw = mcp_urls or ""
+    urls = [u.strip() for u in raw.split(",") if u.strip()]
 
     async def generate():
         context = await ContextFile.from_uploads(files)

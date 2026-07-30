@@ -17,7 +17,6 @@ from rich.table import Table
 load_dotenv()
 
 from config.loader import ConfigLoader
-from mcp_client.client import MCPClient
 from models.context_file import ContextFile
 from orchestrator import CLIOrchestrator
 
@@ -40,13 +39,14 @@ def cli() -> None:
 def run(config: str, mcp_url: tuple[str, ...], files: tuple[str, ...]) -> None:
     console = Console()
     cfg = ConfigLoader(config).load()
-    env_urls = MCPClient.resolve_urls(os.getenv("MCP_URLS", ""))
+    env_csv = os.getenv("MCP_URLS", "")
+    env_urls = [u.strip() for u in env_csv.split(",") if u.strip()]
     urls = env_urls + list(mcp_url)
 
-    context_files = [
-        ContextFile(name=os.path.basename(p), content=open(p).read())
-        for p in files
-    ]
+    context_files = []
+    for p in files:
+        with open(p, encoding="utf-8") as f:
+            context_files.append(ContextFile(name=os.path.basename(p), content=f.read()))
 
     info = Table.grid(padding=(0, 2))
     info.add_column(style="bold")
