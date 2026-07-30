@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from google.adk.agents import LoopAgent, SequentialAgent
@@ -14,6 +13,7 @@ from agents.planner import PlannerAgent
 from agents.summarizer import SummarizerAgent
 from config.schema import OrchestratorConfig
 from models.context_file import ContextFile
+from services.pipeline_service import PipelineService
 
 
 class BaseOrchestrator:
@@ -83,23 +83,12 @@ class BaseOrchestrator:
 
     @staticmethod
     def clean_executor(text: str) -> str:
-        text = re.sub(
-            r"<search[\s\S]*?</search>", "", text, flags=re.IGNORECASE,
-        )
-        return re.sub(r"<[^>]+>", "", text).strip()
+        return PipelineService.clean_executor(text)
 
     @staticmethod
     def extract_tool_calls(parts: list) -> list[str]:
-        return [
-            p.function_call.name
-            for p in parts
-            if getattr(p, "function_call", None)
-        ]
+        return PipelineService.extract_tool_calls(parts)
 
     @staticmethod
     def extract_tool_calls_detailed(parts: list) -> list[dict[str, Any]]:
-        return [
-            {"name": p.function_call.name, "args": dict(p.function_call.args)}
-            for p in parts
-            if getattr(p, "function_call", None)
-        ]
+        return PipelineService.extract_tool_calls_detailed(parts)

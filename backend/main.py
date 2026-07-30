@@ -16,6 +16,7 @@ from fastapi.responses import StreamingResponse
 from config.schema import OrchestratorConfig
 from models.context_file import ContextFile
 from orchestrator import APIOrchestrator
+from services.mcp_service import McpService
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB per file
 MAX_FILES = 10
@@ -60,8 +61,7 @@ async def create_run_stream(
             )
 
     cfg = OrchestratorConfig(goal=goal, max_iterations=max_iterations)
-    raw = mcp_urls or ""
-    urls = [u.strip() for u in raw.split(",") if u.strip()]
+    urls = McpService.parse_urls(mcp_urls or "")
 
     async def generate():
         context = await ContextFile.from_uploads(files)

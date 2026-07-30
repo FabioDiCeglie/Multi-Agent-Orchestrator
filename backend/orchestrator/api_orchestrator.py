@@ -5,6 +5,7 @@ from typing import Any, AsyncIterator
 
 from orchestrator.base import BaseOrchestrator
 from services.error_service import ErrorService
+from services.pipeline_service import PipelineService
 
 
 class APIOrchestrator(BaseOrchestrator):
@@ -30,46 +31,31 @@ class APIOrchestrator(BaseOrchestrator):
 
                 if author == "planner":
                     self.iteration += 1
-                    yield {
-                        "type": "step", "iteration": self.iteration,
-                        "author": "planner", "text": text,
-                    }
+                    yield PipelineService.shape_planner_step(self.iteration, text)
 
                 elif author == "executor":
-                    clean = self.clean_executor(text)
-                    step: dict[str, Any] = {
-                        "type": "step", "iteration": self.iteration,
-                        "author": "executor", "text": clean,
-                    }
-                    if tool_calls:
-                        step["toolCalls"] = tool_calls
-                        step["mcpUrls"] = self.mcp_urls
-                    yield step
+                    yield PipelineService.shape_executor_step(
+                        self.iteration,
+                        text,
+                        tool_calls,
+                        self.mcp_urls,
+                    )
 
                 elif author == "critic":
-                    verdict = "APPROVED" if "APPROVED" in text else "REVISE"
-                    yield {
-                        "type": "step", "iteration": self.iteration,
-                        "author": "critic", "text": text, "verdict": verdict,
-                    }
+                    yield PipelineService.shape_critic_step(self.iteration, text)
 
                 elif author == "summarizer":
                     self.summary_text = text
-                    yield {
-                        "type": "step", "iteration": self.iteration,
-                        "author": "summarizer", "text": text,
-                    }
+                    yield PipelineService.shape_summarizer_step(self.iteration, text)
         except Exception as exc:
             traceback.print_exc()
-            yield {
-                "type": "error",
-                "message": ErrorService.clean_provider_error(exc),
-                "iteration": self.iteration,
-            }
+            yield PipelineService.shape_error_step(
+                ErrorService.clean_provider_error(exc),
+                self.iteration,
+            )
             return
 
-        yield {
-            "type": "final",
-            "result": self.summary_text or "(no result produced)",
-            "iterations": self.iteration,
-        }
+        yield PipelineService.shape_final_step(
+            self.summary_text or "(no result produced)",
+            self.iteration,
+        )
