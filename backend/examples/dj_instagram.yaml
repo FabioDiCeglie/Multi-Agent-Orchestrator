@@ -3,4 +3,3 @@ orchestrator:
   max_iterations: 3
   agent:
     model: "claude-sonnet-4-6"
-    temperature: 0.2

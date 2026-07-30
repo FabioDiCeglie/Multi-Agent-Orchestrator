@@ -32,6 +32,10 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["E402"]
+
+[tool.ruff.lint.per-file-ignores]
+"agents/*.py" = ["E501"]
 
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.9"]

@@ -14,19 +14,17 @@ def test_orchestrator_config_defaults() -> None:
     assert cfg.goal == "Research LLM frameworks"
     assert cfg.max_iterations == 2
     assert cfg.agent.model == "claude-sonnet-4-6"
-    assert cfg.agent.temperature == 0.2
 
 
 def test_orchestrator_config_with_agent_block() -> None:
     cfg = OrchestratorConfig(
         goal="Compare tools",
         max_iterations=5,
-        agent=AgentConfig(model="gpt-4o", temperature=0.5),
+        agent=AgentConfig(model="gpt-4o"),
     )
 
     assert cfg.max_iterations == 5
     assert cfg.agent.model == "gpt-4o"
-    assert cfg.agent.temperature == 0.5
 
 
 def test_orchestrator_config_rejects_invalid_iterations() -> None:
@@ -42,7 +40,7 @@ def test_config_loader_reads_yaml(tmp_path: Path) -> None:
                 "orchestrator": {
                     "goal": "Research MCP servers",
                     "max_iterations": 3,
-                    "agent": {"model": "claude-sonnet-4-6", "temperature": 0.1},
+                    "agent": {"model": "claude-sonnet-4-6"},
                 }
             }
         ),
@@ -53,7 +51,7 @@ def test_config_loader_reads_yaml(tmp_path: Path) -> None:
 
     assert cfg.goal == "Research MCP servers"
     assert cfg.max_iterations == 3
-    assert cfg.agent.temperature == 0.1
+    assert cfg.agent.model == "claude-sonnet-4-6"
 
 
 def test_config_loader_reads_example_file() -> None:

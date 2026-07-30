@@ -204,7 +204,6 @@ Uses `CLIOrchestrator` — same ADK pipeline as the API, but events render as Ri
 ```python
 class AgentConfig(BaseModel):
     model: str = "claude-sonnet-4-6"
-    temperature: float = 0.2  # 0.0–2.0
 
 class OrchestratorConfig(BaseModel):
     goal: str
@@ -222,7 +221,6 @@ orchestrator:
   max_iterations: 3
   agent:
     model: "claude-sonnet-4-6"
-    temperature: 0.2
 ```
 
 `agent` block is optional — omit it to use defaults. The YAML is loaded by `ConfigLoader` and validated by Pydantic.

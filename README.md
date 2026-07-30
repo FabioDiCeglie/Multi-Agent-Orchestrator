@@ -37,6 +37,12 @@ cd backend && uv sync
 
 Requires `ANTHROPIC_API_KEY` in `backend/.env` for Claude access via LiteLLM.
 
+### Tests
+
+```bash
+cd backend && uv sync --group dev && uv run pytest -v
+```
+
 ### MCP servers (optional)
 
 Connect external tools by passing MCP server URLs at runtime:
@@ -69,10 +75,9 @@ orchestrator:
   max_iterations: 3
   agent:
     model: "claude-sonnet-4-6"
-    temperature: 0.2
 ```
 
-`agent` is optional — defaults to `claude-sonnet-4-6` / `0.2` if omitted.
+`agent` is optional — defaults to `claude-sonnet-4-6` if omitted.
 
 ## Project layout
 

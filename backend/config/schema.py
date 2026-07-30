@@ -7,7 +7,6 @@ DEFAULT_MODEL = "claude-sonnet-4-6"
 
 class AgentConfig(BaseModel):
     model: str = DEFAULT_MODEL
-    temperature: float = Field(default=0.2, ge=0.0, le=2.0)
 
 
 class OrchestratorConfig(BaseModel):
