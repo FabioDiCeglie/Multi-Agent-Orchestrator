@@ -30,7 +30,13 @@ export interface PipelineFinalEvent {
   iterations: number;
 }
 
-export type PipelineEvent = PipelineStepEvent | PipelineFinalEvent;
+export interface PipelineErrorEvent {
+  type: "error";
+  message: string;
+  iteration: number;
+}
+
+export type PipelineEvent = PipelineStepEvent | PipelineFinalEvent | PipelineErrorEvent;
 
 /**
  * Streams each Planner/Executor/Critic step as it happens (newline-delimited JSON),

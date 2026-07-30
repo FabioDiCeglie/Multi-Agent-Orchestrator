@@ -38,6 +38,7 @@ export default function Home() {
       let result = "";
       await runPipelineStream(params, (event) => {
         if (event.type === "step") setSteps((prev) => [...prev, event]);
+        else if (event.type === "error") throw new Error(event.message);
         else result = event.result;
       }, signal);
       return result;
