@@ -3,6 +3,7 @@
 import { CopyButton } from "@/app/components/copy-button";
 import { ErrorPanel } from "@/app/components/error-panel";
 import { FileAttachments } from "@/app/components/file-attachments";
+import { MaxIterations } from "@/app/components/max-iterations";
 import { PipelineLoading } from "@/app/components/pipeline-loading";
 import { PipelineSteps } from "@/app/components/pipeline-steps";
 import { AsyncStatus, useAsync } from "@/app/hooks/use-async";
@@ -12,18 +13,18 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const SUGGESTIONS = [
-  "Top 5 LLM frameworks by GitHub stars",
-  "Best open-source vector databases in 2025",
-  "Compare Claude vs GPT vs Gemini for coding tasks",
-];
+  { label: "Agent frameworks", goal: "Compare LangGraph, Google ADK, and CrewAI for building multi-agent workflows" },
+  { label: "Best MCP servers", goal: "Research the most popular MCP servers and compare their tools, transport, and use cases" },
+] as const;
 
 interface FormState {
   goal: string;
   files: File[];
   mcpUrls: string[];
+  maxIterations: number;
 }
 
-const INITIAL_FORM: FormState = { goal: "", files: [], mcpUrls: [] };
+const INITIAL_FORM: FormState = { goal: "", files: [], mcpUrls: [], maxIterations: 2 };
 
 export default function Home() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -51,7 +52,12 @@ export default function Home() {
   const handleRun = () => {
     if (!form.goal.trim()) return;
     setSteps([]);
-    run({ goal: form.goal, maxIterations: 5, files: form.files, mcpUrls: form.mcpUrls });
+    run({
+      goal: form.goal,
+      maxIterations: form.maxIterations,
+      files: form.files,
+      mcpUrls: form.mcpUrls,
+    });
   };
 
   const handleReset = () => {
@@ -87,12 +93,35 @@ export default function Home() {
           <h1 className="mb-3 text-center text-4xl font-semibold tracking-tight text-text-primary">
             Give the pipeline a goal
           </h1>
-          <p className="mb-10 text-center text-sm text-text-secondary max-w-sm">
+          <p className="mb-6 text-center text-sm text-text-secondary max-w-sm">
             Three agents — Planner, Executor, Critic — will research,
             execute and verify until the answer is ready.
           </p>
 
+          <div className="mb-6 flex flex-col items-center gap-2">
+            <span className="text-[11px] text-text-muted">Try an example</span>
+            <div className="flex flex-nowrap justify-center gap-2">
+              {SUGGESTIONS.map(({ label, goal }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => updateForm({ goal })}
+                  className="shrink-0 rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-hover hover:bg-surface-2 hover:text-text-primary cursor-pointer"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="w-full max-w-xl rounded-2xl border border-border bg-surface-1 shadow-sm overflow-hidden">
+            <div className="border-b border-border px-5 py-3">
+              <MaxIterations
+                value={form.maxIterations}
+                onChange={(maxIterations) => updateForm({ maxIterations })}
+              />
+            </div>
+
             <div className="border-b border-transparent px-5 pt-5 pb-4 transition-colors focus-within:border-b-border">
               <textarea
                 autoFocus
@@ -121,7 +150,7 @@ export default function Home() {
                   <svg className="size-3 transition-transform group-open:rotate-90" viewBox="0 0 12 12" fill="currentColor">
                     <path d="M4.5 2l4 4-4 4" />
                   </svg>
-                  MCP Servers
+                  Connect MCP Servers
                   {form.mcpUrls.length > 0 && (
                     <span className="rounded-full bg-brand-600/15 px-1.5 text-[10px] font-medium text-brand-500">
                       {form.mcpUrls.length}
@@ -179,18 +208,6 @@ export default function Home() {
                 Run pipeline →
               </button>
             </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => updateForm({ goal: s })}
-                className="rounded-full border border-border bg-surface-1 px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
-              >
-                {s}
-              </button>
-            ))}
           </div>
         </>
       )}
