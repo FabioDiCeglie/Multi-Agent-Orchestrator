@@ -37,7 +37,7 @@ export type PipelineEvent = PipelineStepEvent | PipelineFinalEvent;
  * invoking `onEvent` per step/final event. Resolves once the stream ends.
  */
 export async function runPipelineStream(
-  { goal, maxIterations = 3, files = [], mcpUrls = [] }: RunPipelineParams,
+  { goal, maxIterations = 5, files = [], mcpUrls = [] }: RunPipelineParams,
   onEvent: (event: PipelineEvent) => void,
   signal?: AbortSignal
 ): Promise<void> {

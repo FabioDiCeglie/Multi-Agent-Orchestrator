@@ -30,6 +30,7 @@ class BaseOrchestrator:
         self.summary_text = ""
 
     def _build_pipeline(self) -> SequentialAgent:
+        model = self.cfg.agent.model
         return SequentialAgent(
             name="orchestrator",
             sub_agents=[
@@ -40,14 +41,14 @@ class BaseOrchestrator:
                         SequentialAgent(
                             name="pipeline",
                             sub_agents=[
-                                PlannerAgent(),
-                                ExecutorAgent(self.mcp_urls, self.files),
-                                CriticAgent(),
+                                PlannerAgent(model=model),
+                                ExecutorAgent(self.mcp_urls, self.files, model=model),
+                                CriticAgent(model=model),
                             ],
                         )
                     ],
                 ),
-                SummarizerAgent(),
+                SummarizerAgent(model=model),
             ],
         )
 

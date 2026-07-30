@@ -50,7 +50,7 @@ export default function Home() {
   const handleRun = () => {
     if (!form.goal.trim()) return;
     setSteps([]);
-    run({ goal: form.goal, maxIterations: 3, files: form.files, mcpUrls: form.mcpUrls });
+    run({ goal: form.goal, maxIterations: 5, files: form.files, mcpUrls: form.mcpUrls });
   };
 
   const handleReset = () => {
