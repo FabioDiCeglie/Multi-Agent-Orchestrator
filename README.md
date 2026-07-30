@@ -32,6 +32,7 @@ cd backend && uv sync
 | Service  | Command                                  | Port   |
 | -------- | ---------------------------------------- | ------ |
 | Backend  | `uv run uvicorn main:app --reload`       | :8000  |
+| API docs | —                                        | http://localhost:8000/ |
 | Frontend | `cd frontend && npm install && npm run dev` | :3000  |
 | CLI      | `uv run orchestrator run --config examples/research_goal.yaml` | —  |
 
@@ -50,6 +51,7 @@ docker compose up --build
 | -------- | --------------------- |
 | Frontend | http://localhost:3000 |
 | Backend  | http://localhost:8000 |
+| API docs | http://localhost:8000/ |
 
 If MCP servers run on your host machine (not in Docker), use `http://host.docker.internal:PORT/mcp` instead of `localhost` in the UI — the backend container can't reach `localhost` on your host.
 

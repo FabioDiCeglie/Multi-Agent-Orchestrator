@@ -27,7 +27,7 @@ CORS_ORIGINS = [
     if o.strip()
 ]
 
-app = FastAPI(title="Multi-Agent Orchestrator")
+app = FastAPI(title="Multi-Agent Orchestrator", docs_url="/", redoc_url="/redoc")
 
 app.add_middleware(
     CORSMiddleware,

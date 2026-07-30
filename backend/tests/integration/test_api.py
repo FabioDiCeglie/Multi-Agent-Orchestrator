@@ -16,6 +16,10 @@ async def _fake_run_stream(self) -> AsyncIterator[dict[str, Any]]:
     yield {"type": "final", "result": "Done", "iterations": 1}
 
 
+async def _fake_error_run_stream(self) -> AsyncIterator[dict[str, Any]]:
+    yield {"type": "error", "message": "Rate limit exceeded", "iteration": 1}
+
+
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(main.app)
@@ -26,6 +30,13 @@ def test_health_returns_204(client: TestClient) -> None:
 
     assert response.status_code == 204
     assert response.content == b""
+
+
+def test_root_serves_api_docs(client: TestClient) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "swagger-ui" in response.text
 
 
 @patch.object(APIOrchestrator, "run_stream", _fake_run_stream)
@@ -42,6 +53,18 @@ def test_runs_stream_returns_ndjson(client: TestClient) -> None:
     assert events[0]["type"] == "step"
     assert events[0]["author"] == "planner"
     assert events[-1] == {"type": "final", "result": "Done", "iterations": 1}
+
+
+@patch.object(APIOrchestrator, "run_stream", _fake_error_run_stream)
+def test_runs_stream_returns_error_event(client: TestClient) -> None:
+    response = client.post(
+        "/runs/stream",
+        data={"goal": "Test", "max_iterations": "2"},
+    )
+
+    assert response.status_code == 200
+    events = [json.loads(line) for line in response.text.strip().split("\n") if line]
+    assert events == [{"type": "error", "message": "Rate limit exceeded", "iteration": 1}]
 
 
 @patch.object(APIOrchestrator, "run_stream", _fake_run_stream)
