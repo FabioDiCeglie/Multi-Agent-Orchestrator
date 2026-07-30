@@ -29,9 +29,9 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+@app.get("/health", status_code=204)
+async def health() -> None:
+    return
 
 
 @app.post("/runs/stream")
