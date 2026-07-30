@@ -21,26 +21,36 @@ class CLIOrchestrator(BaseOrchestrator):
         runner, session = await self._create_runner()
         message = self._build_message()
 
-        async for event in runner.run_async(
-            user_id="user", session_id=session.id, new_message=message,
-        ):
-            author = getattr(event, "author", None)
-            if not (event.content and event.content.parts):
-                continue
+        try:
+            async for event in runner.run_async(
+                user_id="user", session_id=session.id, new_message=message,
+            ):
+                author = getattr(event, "author", None)
+                if not (event.content and event.content.parts):
+                    continue
 
-            tool_calls = self.extract_tool_calls(event.content.parts)
-            text = (event.content.parts[0].text or "").strip()
-            if not text:
-                continue
+                tool_calls = self.extract_tool_calls(event.content.parts)
+                text = (event.content.parts[0].text or "").strip()
+                if not text:
+                    continue
 
-            if author == "planner":
-                self._print_planner(text)
-            elif author == "executor":
-                self._print_executor(text, tool_calls)
-            elif author == "critic":
-                self._print_critic(text)
-            elif author == "summarizer":
-                self._print_summarizer(text)
+                if author == "planner":
+                    self._print_planner(text)
+                elif author == "executor":
+                    self._print_executor(text, tool_calls)
+                elif author == "critic":
+                    self._print_critic(text)
+                elif author == "summarizer":
+                    self._print_summarizer(text)
+        except Exception as exc:
+            self.console.print()
+            self.console.print(Panel(
+                str(getattr(exc, "message", None) or exc),
+                title="[bold red]❌ Error[/bold red]",
+                border_style="red",
+                padding=(1, 2),
+            ))
+            return ""
 
         self._print_complete()
         return self.summary_text or "(no result produced)"
