@@ -40,7 +40,16 @@ Requires `ANTHROPIC_API_KEY` in `backend/.env` for Claude access via LiteLLM.
 ### Tests
 
 ```bash
-cd backend && uv sync --group dev && uv run pytest -v
+cd backend && uv sync --group dev
+
+# All tests
+uv run pytest -v
+
+# Unit only
+uv run pytest tests/unit -v
+
+# Integration only
+uv run pytest tests/integration -v
 ```
 
 ### MCP servers (optional)

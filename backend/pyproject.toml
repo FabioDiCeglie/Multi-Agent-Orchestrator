@@ -40,3 +40,6 @@ ignore = ["E402"]
 
 [dependency-groups]
 dev = ["pytest>=8.0", "ruff>=0.9"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

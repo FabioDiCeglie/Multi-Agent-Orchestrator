@@ -55,7 +55,8 @@ def test_config_loader_reads_yaml(tmp_path: Path) -> None:
 
 
 def test_config_loader_reads_example_file() -> None:
-    cfg = ConfigLoader("examples/research_goal.yaml").load()
+    example = Path(__file__).resolve().parents[2] / "examples/research_goal.yaml"
+    cfg = ConfigLoader(example).load()
 
     assert "LLM frameworks" in cfg.goal
     assert cfg.max_iterations == 3
