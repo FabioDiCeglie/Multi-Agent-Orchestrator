@@ -44,7 +44,7 @@ async def health() -> None:
 @app.post("/runs/stream")
 async def create_run_stream(
     goal: str = Form(...),
-    max_iterations: int = Form(5),
+    max_iterations: int = Form(2),
     mcp_urls: str | None = Form(default=None),
     files: list[UploadFile] = File(default=[]),
 ) -> StreamingResponse:

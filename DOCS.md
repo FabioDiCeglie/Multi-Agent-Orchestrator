@@ -120,7 +120,7 @@ Single endpoint: `POST /runs/stream`. Accepts multipart form data, returns newli
 | Field | Type | Required | Default |
 | ----- | ---- | -------- | ------- |
 | `goal` | string | Yes | — |
-| `max_iterations` | int | No | 5 |
+| `max_iterations` | int | No | 2 |
 | `mcp_urls` | string (comma-separated) | No | — |
 | `files` | file uploads | No | — |
 
@@ -208,7 +208,7 @@ class AgentConfig(BaseModel):
 
 class OrchestratorConfig(BaseModel):
     goal: str
-    max_iterations: int = 5   # 1–20
+    max_iterations: int = 2   # 1–20
     agent: AgentConfig = AgentConfig()
 ```
 

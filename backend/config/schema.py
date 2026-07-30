@@ -12,5 +12,5 @@ class AgentConfig(BaseModel):
 
 class OrchestratorConfig(BaseModel):
     goal: str
-    max_iterations: int = Field(default=5, ge=1, le=20)
+    max_iterations: int = Field(default=2, ge=1, le=20)
     agent: AgentConfig = Field(default_factory=AgentConfig)
