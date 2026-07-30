@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -19,11 +20,17 @@ from orchestrator import APIOrchestrator
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB per file
 MAX_FILES = 10
 
+CORS_ORIGINS = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+    if o.strip()
+]
+
 app = FastAPI(title="Multi-Agent Orchestrator")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

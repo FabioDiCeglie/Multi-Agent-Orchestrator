@@ -233,6 +233,7 @@ orchestrator:
 | -------- | ----------- |
 | `ANTHROPIC_API_KEY` | Required for Claude models via LiteLLM |
 | `GEMINI_API_KEY` | Required for Gemini models |
+| `CORS_ORIGINS` | Comma-separated allowed origins (default `http://localhost:3000`) |
 
 ---
 
