@@ -40,11 +40,20 @@ Requires `ANTHROPIC_API_KEY` in `backend/.env` for Claude access via LiteLLM.
 
 ### Docker Compose
 
-One command for backend + frontend with hot reload:
+One command for backend + frontend with hot reload (runs in the background):
 
 ```bash
 cp backend/.env.example backend/.env   # add your ANTHROPIC_API_KEY
-docker compose up --build
+docker compose up --build -d
+```
+
+Useful commands:
+
+```bash
+docker compose logs -f          # follow logs
+docker compose ps               # container status
+docker compose down             # stop
+docker compose down -v          # stop and remove volumes (fresh start)
 ```
 
 | Service  | URL                   |
