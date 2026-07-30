@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as json_mod
 import traceback
 from typing import Any, AsyncIterator
 
@@ -7,6 +8,17 @@ from orchestrator.base import BaseOrchestrator
 
 
 class APIOrchestrator(BaseOrchestrator):
+    @staticmethod
+    def _clean_error(exc: Exception) -> str:
+        raw = getattr(exc, "message", None) or str(exc)
+        if " - " not in raw:
+            return raw
+        try:
+            body = json_mod.loads(raw.split(" - ", 1)[1])
+            return body.get("error", {}).get("message") or raw
+        except (json_mod.JSONDecodeError, AttributeError):
+            return raw
+
     async def run_stream(self) -> AsyncIterator[dict[str, Any]]:
         """Yields one dict per Planner/Executor/Critic step, then a final event."""
         runner, session = await self._create_runner()
@@ -62,7 +74,7 @@ class APIOrchestrator(BaseOrchestrator):
             traceback.print_exc()
             yield {
                 "type": "error",
-                "message": str(exc) or type(exc).__name__,
+                "message": self._clean_error(exc),
                 "iteration": self.iteration,
             }
             return
