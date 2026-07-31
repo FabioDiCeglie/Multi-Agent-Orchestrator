@@ -33,7 +33,7 @@ gcloud services enable run.googleapis.com secretmanager.googleapis.com cloudbuil
 Copy the production URL into `deploy.env`:
 
 ```bash
-VERCEL_URL=https://your-app.vercel.app   # no trailing slash
+VERCEL_URL=https://your-app.vercel.app
 ```
 
 Re-`source deploy.env` after editing.

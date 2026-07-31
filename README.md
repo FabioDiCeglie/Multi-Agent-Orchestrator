@@ -2,6 +2,8 @@
 
 A goal-driven AI pipeline built on [Google ADK](https://google.github.io/adk-docs/) and [MCP](https://modelcontextprotocol.io/) tool use. Four agents — Planner, Executor, Critic, Summarizer — loop until the answer is ready.
 
+**Live demo:** [multi-agent-orchestrator-ten.vercel.app](https://multi-agent-orchestrator-ten.vercel.app/)
+
 See [DOCS.md](./DOCS.md) for architecture and design decisions.
 
 ## Architecture

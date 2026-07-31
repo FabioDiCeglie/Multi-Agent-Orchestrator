@@ -22,7 +22,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB per file
 MAX_FILES = 10
 
 CORS_ORIGINS = [
-    o.strip()
+    o.strip().rstrip("/")
     for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
     if o.strip()
 ]
