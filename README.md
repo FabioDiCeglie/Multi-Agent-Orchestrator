@@ -36,14 +36,14 @@ cd backend && uv sync
 | Frontend | `cd frontend && npm install && npm run dev` | :3000  |
 | CLI      | `uv run orchestrator run --config examples/research_goal.yaml` | —  |
 
-Requires `ANTHROPIC_API_KEY` in `backend/.env` for Claude access via LiteLLM.
+Requires `GEMINI_API_KEY` in `backend/.env` for Gemini access via LiteLLM (default model: `gemini/gemini-3-flash-preview`).
 
 ### Docker Compose
 
 One command for backend + frontend with hot reload (runs in the background):
 
 ```bash
-cp backend/.env.example backend/.env   # add your ANTHROPIC_API_KEY
+cp backend/.env.example backend/.env   # add your GEMINI_API_KEY
 docker compose up --build -d
 ```
 
@@ -110,10 +110,10 @@ orchestrator:
   goal: "Research the top 5 LLM frameworks and produce a comparison table."
   max_iterations: 3
   agent:
-    model: "claude-sonnet-4-6"
+    model: "gemini/gemini-3-flash-preview"
 ```
 
-`agent` is optional — defaults to `claude-sonnet-4-6` if omitted.
+`agent` is optional — defaults to `gemini/gemini-3-flash-preview` if omitted.
 
 ## Project layout
 
