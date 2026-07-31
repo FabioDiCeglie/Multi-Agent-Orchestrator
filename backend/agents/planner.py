@@ -1,3 +1,4 @@
+from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
@@ -15,7 +16,7 @@ If you receive feedback from a previous attempt, use it to improve the plan.
 
 
 class PlannerAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL) -> None:
         super().__init__(
             name="planner",
             model=LiteLlm(model=model),

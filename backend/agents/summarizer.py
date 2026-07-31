@@ -1,3 +1,4 @@
+from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
@@ -16,7 +17,7 @@ Rules:
 
 
 class SummarizerAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL) -> None:
         super().__init__(
             name="summarizer",
             model=LiteLlm(model=model),

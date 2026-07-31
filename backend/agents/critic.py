@@ -1,3 +1,4 @@
+from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.tool_context import ToolContext
@@ -19,7 +20,7 @@ def exit_loop(tool_context: ToolContext) -> dict:
 
 
 class CriticAgent(LlmAgent):
-    def __init__(self, model: str = "claude-sonnet-4-6") -> None:
+    def __init__(self, model: str = DEFAULT_MODEL) -> None:
         super().__init__(
             name="critic",
             model=LiteLlm(model=model),

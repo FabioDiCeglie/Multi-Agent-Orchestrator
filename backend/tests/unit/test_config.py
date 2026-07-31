@@ -5,7 +5,7 @@ import yaml
 from pydantic import ValidationError
 
 from config.loader import ConfigLoader
-from config.schema import AgentConfig, OrchestratorConfig
+from config.schema import AgentConfig, DEFAULT_MODEL, OrchestratorConfig
 
 
 def test_orchestrator_config_defaults() -> None:
@@ -13,7 +13,7 @@ def test_orchestrator_config_defaults() -> None:
 
     assert cfg.goal == "Research LLM frameworks"
     assert cfg.max_iterations == 2
-    assert cfg.agent.model == "claude-sonnet-4-6"
+    assert cfg.agent.model == DEFAULT_MODEL
 
 
 def test_orchestrator_config_with_agent_block() -> None:
@@ -40,7 +40,7 @@ def test_config_loader_reads_yaml(tmp_path: Path) -> None:
                 "orchestrator": {
                     "goal": "Research MCP servers",
                     "max_iterations": 3,
-                    "agent": {"model": "claude-sonnet-4-6"},
+                    "agent": {"model": "gemini/gemini-3-flash-preview"},
                 }
             }
         ),
@@ -51,7 +51,7 @@ def test_config_loader_reads_yaml(tmp_path: Path) -> None:
 
     assert cfg.goal == "Research MCP servers"
     assert cfg.max_iterations == 3
-    assert cfg.agent.model == "claude-sonnet-4-6"
+    assert cfg.agent.model == DEFAULT_MODEL
 
 
 def test_config_loader_reads_example_file() -> None:

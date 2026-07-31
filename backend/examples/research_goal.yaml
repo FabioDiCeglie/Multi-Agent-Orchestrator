@@ -2,4 +2,4 @@ orchestrator:
   goal: "Research the top 5 open-source LLM frameworks and produce a markdown comparison table covering: stars, license, main use case, and Python support."
   max_iterations: 3
   agent:
-    model: "claude-sonnet-4-6"
+    model: "gemini/gemini-3-flash-preview"

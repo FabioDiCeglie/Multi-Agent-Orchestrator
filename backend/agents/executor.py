@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool.mcp_toolset import (
@@ -41,7 +42,7 @@ class ExecutorAgent(LlmAgent):
         self,
         mcp_urls: list[str],
         context_files: list[ContextFile] | None = None,
-        model: str = "claude-sonnet-4-6",
+        model: str = DEFAULT_MODEL,
     ) -> None:
         tools: list = [
             McpToolset(
