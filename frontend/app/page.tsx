@@ -25,6 +25,7 @@ interface FormState {
 }
 
 const INITIAL_FORM: FormState = { goal: "", files: [], mcpUrls: [], maxIterations: 2 };
+const DEFAULT_MODEL = "gemini-3-flash-preview";
 
 export default function Home() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -115,11 +116,30 @@ export default function Home() {
           </div>
 
           <div className="w-full max-w-xl rounded-2xl border border-border bg-surface-1 shadow-sm overflow-hidden">
-            <div className="border-b border-border px-5 py-3">
+            <div className="border-b border-border px-5 py-3 flex items-center justify-between gap-4">
               <MaxIterations
                 value={form.maxIterations}
                 onChange={(maxIterations) => updateForm({ maxIterations })}
               />
+              <span
+                title={`All agents use ${DEFAULT_MODEL}`}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[11px] text-text-secondary"
+              >
+                <svg
+                  className="size-3 text-brand-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                  <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1 1 3z" />
+                </svg>
+                <span className="font-mono text-text-primary">{DEFAULT_MODEL}</span>
+              </span>
             </div>
 
             <div className="border-b border-transparent px-5 pt-5 pb-4 transition-colors focus-within:border-b-border">
