@@ -1,7 +1,8 @@
-from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.tool_context import ToolContext
+
+from config.schema import DEFAULT_MODEL
 
 INSTRUCTION = """You are a critic agent. Review the work done by the executor and decide if the goal has been achieved.
 

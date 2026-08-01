@@ -5,7 +5,7 @@ import yaml
 from pydantic import ValidationError
 
 from config.loader import ConfigLoader
-from config.schema import AgentConfig, DEFAULT_MODEL, OrchestratorConfig
+from config.schema import DEFAULT_MODEL, AgentConfig, OrchestratorConfig
 
 
 def test_orchestrator_config_defaults() -> None:

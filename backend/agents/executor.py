@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool.mcp_toolset import (
@@ -8,6 +7,7 @@ from google.adk.tools.mcp_tool.mcp_toolset import (
     StreamableHTTPConnectionParams,
 )
 
+from config.schema import DEFAULT_MODEL
 from models.context_file import ContextFile
 
 INSTRUCTION = """You are an execution agent. You receive a list of subtasks and execute them one by one using the tools available to you.

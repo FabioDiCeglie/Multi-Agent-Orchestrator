@@ -1,6 +1,7 @@
-from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
+
+from config.schema import DEFAULT_MODEL
 
 INSTRUCTION = """You are a summarization agent. The Planner, Executor and Critic have already
 finished and approved the work for the user's goal.

@@ -1,6 +1,7 @@
-from config.schema import DEFAULT_MODEL
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
+
+from config.schema import DEFAULT_MODEL
 
 INSTRUCTION = """You are a planning agent. Given a high-level goal, break it down into a short list of concrete subtasks.
 
